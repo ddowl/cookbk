@@ -30,6 +30,8 @@ cooking-api/.byebug_history
 # Ignore master key for decrypting credentials and more.
 cooking-api/config/master.key
 
+api/dist
+
 ##########################
 # Cooking Client ignores #
 ##########################
