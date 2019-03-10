@@ -37,6 +37,8 @@ server/api/dist
 #############
 server/scheduler/.pytest_cache
 server/scheduler/env
+__pycache__/
+*.pyc
 
 
 ##########################
