@@ -35,8 +35,6 @@ jobs_data = [  # task = (machine_id, processing_time).
 ]
 
 in https://developers.google.com/optimization/scheduling/job_shop
-
-NOTE: Optimizer currently doesn't include penalty for not having recipes finish close together
 '''
 def optimize_recipes(recipes):
     import collections
@@ -55,16 +53,16 @@ def optimize_recipes(recipes):
 
     nonattending_machine = 1  # machine 0 is for attended tasks
 
-    def task_transform(duration, attending):
-        if attending:
-            return (0, duration)
+    def task_transform(step):
+        if step.attending:
+            return (0, step.duration)
         else:
             nonlocal nonattending_machine
-            task = (nonattending_machine, duration)
+            task = (nonattending_machine, step.duration)
             nonattending_machine += 1
             return task
 
-    jobs_data = [[task_transform(dur, attending) for dur, attending in recipe] for recipe in recipes]
+    jobs_data = [[task_transform(step) for step in recipe.steps] for recipe in recipes]
     print(jobs_data)
 
     machines_count = 1 + max(task[0] for job in jobs_data for task in job)
@@ -104,10 +102,23 @@ def optimize_recipes(recipes):
         for task_id in range(0, len(jobs_data[job]) - 1):
             model.Add(all_tasks[job, task_id].end <= all_tasks[job, task_id + 1].start)
 
-    # Define objective function
+    # Define Makespan
 
     def last_task(job_idx):
         return all_tasks[(job_idx, len(jobs_data[job_idx]) - 1)]
+
+    makespan_var = model.NewIntVar(0, horizon, 'makespan')
+    model.AddMaxEquality(
+        makespan_var,
+        [last_task(job).end for job in all_jobs]
+    )
+
+    # Add max_serving_wait_time constraints
+    # (i.e. a given recipe can't end more than max_serving_time minutes before all recipes are done)
+    for job in all_jobs:
+        model.Add(last_task(job).end >= makespan_var - recipes[job].max_serving_wait_time)
+
+    # Define objective function
 
     # # Minimize difference in recipe end times
     # # (The difference between the end times of the last steps between any 2 recipes should be minimized)
@@ -132,13 +143,6 @@ def optimize_recipes(recipes):
     # # "TypeError: NotSupported: model.GetOrMakeIndex((end_0_0 + -end_1_0))"
     # model.AddMaxEquality(recipe_end_diff_var, diffs)
 
-    # Makespan objective.
-    makespan_var = model.NewIntVar(0, horizon, 'makespan')
-    model.AddMaxEquality(
-        makespan_var,
-        [last_task(job).end for job in all_jobs]
-    )
-
     model.Minimize(makespan_var)
 
     # Solve model
@@ -154,7 +158,6 @@ def optimize_recipes(recipes):
         def on_solution_callback(self):
             print('Solution %i' % self.__solution_count)
             print('  objective value = %i' % self.ObjectiveValue())
-            print('  makespan_var = %i' % self.Value('makespan'))
             for t in self.__tasks:
                 print('  %s = %i' % (t.start, self.Value(t.start)), end=' ')
                 print('  %s = %i' % (t.end, self.Value(t.end)), end=' ')
