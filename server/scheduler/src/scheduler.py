@@ -101,43 +101,44 @@ def optimize_recipes(recipes):
         for task_id in range(0, len(jobs_data[job]) - 1):
             model.Add(all_tasks[job, task_id].end <= all_tasks[job, task_id + 1].start)
 
+    # Define objective function
 
-
-    # Makespan objective.
-    makespan_var = model.NewIntVar(0, horizon, 'makespan')
-    model.AddMaxEquality(
-        makespan_var,
-        [all_tasks[(job, len(jobs_data[job]) - 1)].end for job in all_jobs])
-    model.Minimize(makespan_var)
+    def last_task(job_idx):
+        return all_tasks[(job_idx, len(jobs_data[job_idx]) - 1)]
 
     # Minimize difference in recipe end times
     # (The difference between the end times of the last steps between any 2 recipes should be minimized)
     recipe_end_diff_var = model.NewIntVar(0, horizon, 'recipe_end_diff')
 
     def job_end_diff(job_a, job_b):
-        last_idx_a = len(jobs_data[job_a]) - 1
-        last_idx_b = len(jobs_data[job_a]) - 1
-        end_of_last_step_a = all_tasks[(job_a, last_idx_a)].end
-        end_of_last_step_b = all_tasks[(job_b, last_idx_b)].end
+        last_task_a = last_task(job_a)
+        last_task_b = last_task(job_b)
 
-        interval_a_b = model.NewIntervalVar(end_of_last_step_a, duration, end_of_last_step_b, 'end_diff_interval_%i_%i_%i_%i' % (job_a, last_idx_a, job_b, last_idx_b))
-        # interval_b_a = model.NewIntervalVar(end_of_last_step_b, duration, end_of_last_step_a, 'end_diff_interval_%i_%i_%i_%i' % (job_b, last_idx_b, job_a, last_idx_a))
-        print(interval_a_b)
-        # print(interval_b_a)
-
-        return interval_a_b
+        return last_task_a.end - last_task_b.end
 
     diffs = []
     for job_a in all_jobs:
         for job_b in all_jobs:
-            # if job_a != job_b:
-            diffs.append(job_end_diff(job_a, job_b))
+            if job_a != job_b:
+                diffs.append(job_end_diff(job_a, job_b))
 
     print(diffs)
 
     # recipe_end_diff_var is set to the maximum difference between job endings
+    # API doesn't support assigning this var to the difference of two IntVars
+    # "TypeError: NotSupported: model.GetOrMakeIndex((end_0_0 + -end_1_0))"
     model.AddMaxEquality(recipe_end_diff_var, diffs)
-    model.Minimize(recipe_end_diff_var)
+
+    # Makespan objective.
+    makespan_var = model.NewIntVar(0, horizon, 'makespan')
+    model.AddMaxEquality(
+        makespan_var,
+        [last_task(job).end for job in all_jobs]
+    )
+
+    model.Minimize(makespan_var + recipe_end_diff_var)
+
+
 
     # Solve model.
     solver = cp_model.CpSolver()
@@ -148,8 +149,8 @@ def optimize_recipes(recipes):
 
         # Print out makespan.
         print('Optimal Schedule Length: %i' % solver.ObjectiveValue())
-        print(f"minimized recipe_end_diff: {solver.Value('recipe_end_diff')}")
         print()
+
 
         # Create one list of assigned tasks per machine.
         assigned_jobs = [[] for _ in all_machines]
