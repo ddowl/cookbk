@@ -1,6 +1,9 @@
 import collections
 from src.scheduler import optimize_recipes
 
+# NOTE: Optimizer currently doesn't include penalty for not having recipes finish close together,
+# so current expected results may not be the "best" schedules.
+
 assigned_task_type = collections.namedtuple('assigned_task_type', 'start recipe step')
 
 
@@ -74,6 +77,15 @@ def test_two_recipes_one_step_one_attending():
         ]
     ]
     expected = [
+        [
+            assigned_task_type(start=0, recipe=0, step=0),
+        ],
+        [
+            assigned_task_type(start=0, recipe=1, step=0),
+        ]
+    ]
+
+    best_expected = [
         [
             assigned_task_type(start=0, recipe=0, step=0),
         ],
