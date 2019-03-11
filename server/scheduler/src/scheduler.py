@@ -1,61 +1,37 @@
+import collections
 
-'''
-Creates an optimal schedule for the given recipes ending at 'serving_time'
-Output format:
-
-...
-
-'''
-def schedule_recipes(recipes, serving_time):
-    pass
-
+# Import Python wrapper for or-tools CP-SAT solver.
+from ortools.sat.python import cp_model
 
 '''
 Since we're figuring out how to do formulate optimization problems, we'll make a lot of assumptions.
 Let's assume that there's only 1 cook, and no constraint on kitchenware (i.e. infinite ovens, bowls, etc)
-For now we can represent recipes by a list arrays where each subarray has a duration and attending status"
+We can represent recipes as an object that has a list of steps to complete, a "cool down time", and some metadata.
 
-[
-    [3, True],
-    [10, False],
-    ...
-]
+Our recipe scheduling problem can be turned into the job-shop problem by assigning one machine represent the one cook,
+machine '0'. All attended recipe steps must 'be processed by' machine 0. We can tell the constraint solver to run
+non-attending tasks in parallel by assigning them to unique machines.
 
-We can turn our recipe scheduling problem into the job-shop problem by making a certain machine represent the one cook,
-namely machine '0'. All attended recipe steps will be required to 'be processed by' machine 0, which represents the
-cook constraint. We can tell the constraint solver to run non-attending tasks in parallel by assigning them to unique
-machines.
-
-The structure of the input we need to transform to is described as 
-
-jobs_data = [  # task = (machine_id, processing_time).
-    [(0, 3), (1, 2), (2, 2)],  # Job0
-    [(0, 2), (2, 1), (1, 4)],  # Job1
-    [(1, 4), (2, 3)]  # Job2
-]
-
-in https://developers.google.com/optimization/scheduling/job_shop
+An example usage of ortools's usage of the cp_model to solve a generic job shop problem can be found at
+https://developers.google.com/optimization/scheduling/job_shop
 '''
-def optimize_recipes(recipes):
-    import collections
 
-    # Import Python wrapper for or-tools CP-SAT solver.
-    from ortools.sat.python import cp_model
 
-    print(recipes)
-
+def schedule_recipes(recipes):
     if len(recipes) == 0:
         return []
 
-    """Minimal jobshop problem."""
-    # Create the model.
+    ################
+    # Define Model #
+    ################
+
     model = cp_model.CpModel()
 
     nonattending_machine = 1  # machine 0 is for attended tasks
 
     def task_transform(step):
         if step.attending:
-            return (0, step.duration)
+            return 0, step.duration
         else:
             nonlocal nonattending_machine
             task = (nonattending_machine, step.duration)
@@ -63,7 +39,6 @@ def optimize_recipes(recipes):
             return task
 
     jobs_data = [[task_transform(step) for step in recipe.steps] for recipe in recipes]
-    print(jobs_data)
 
     machines_count = 1 + max(task[0] for job in jobs_data for task in job)
     all_machines = range(machines_count)
@@ -76,7 +51,10 @@ def optimize_recipes(recipes):
     task_type = collections.namedtuple('task_type', 'start end interval')
     assigned_task_type = collections.namedtuple('assigned_task_type', 'start recipe step')
 
-    # Create jobs.
+    ####################
+    # Define Variables #
+    ####################
+
     all_tasks = {}
     for job in all_jobs:
         for task_id, task in enumerate(jobs_data[job]):
@@ -86,7 +64,9 @@ def optimize_recipes(recipes):
             interval_var = model.NewIntervalVar(start_var, duration, end_var, 'interval_%i_%i' % (job, task_id))
             all_tasks[job, task_id] = task_type(start=start_var, end=end_var, interval=interval_var)
 
-    print(all_tasks)
+    ######################
+    # Define Constraints #
+    ######################
 
     # Create and add disjunctive constraints.
     for machine in all_machines:
@@ -118,8 +98,6 @@ def optimize_recipes(recipes):
     for job in all_jobs:
         model.Add(last_task(job).end >= makespan_var - recipes[job].max_serving_wait_time)
 
-    # Define objective function
-
     # # Minimize difference in recipe end times
     # # (The difference between the end times of the last steps between any 2 recipes should be minimized)
     # recipe_end_diff_var = model.NewIntVar(0, horizon, 'recipe_end_diff')
@@ -143,9 +121,16 @@ def optimize_recipes(recipes):
     # # "TypeError: NotSupported: model.GetOrMakeIndex((end_0_0 + -end_1_0))"
     # model.AddMaxEquality(recipe_end_diff_var, diffs)
 
+    #########################
+    # Define Objective Func #
+    #########################
+
     model.Minimize(makespan_var)
 
-    # Solve model
+    ############
+    # Solve :) #
+    ############
+
     # Use solver.SolveWithSolutionCallback to examine intermediate solutions
     class RecipeSolutionPrinter(cp_model.CpSolverSolutionCallback):
         """Print intermediate solutions."""
@@ -172,35 +157,18 @@ def optimize_recipes(recipes):
     # printer = RecipeSolutionPrinter(all_tasks.values())
     # status = solver.SolveWithSolutionCallback(model, printer)
     status = solver.Solve(model)
-    print(status)
 
     if status == cp_model.OPTIMAL:
         print("Found optimal solution!")
 
-        # Print out makespan.
-        print('Optimal Schedule Length: %i' % solver.ObjectiveValue())
-        print()
-
-
-        # Create one list of assigned tasks per machine.
-        assigned_jobs = [[] for _ in all_machines]
+        # We don't really care about what "machines" each task was assigned to atm
+        # just set the start time on each recipe step appropriately
         for job in all_jobs:
             for task_id, task in enumerate(jobs_data[job]):
-                machine = task[0]
-                assigned_jobs[machine].append(
-                    assigned_task_type(
-                        start=solver.Value(all_tasks[job, task_id].start),
-                        recipe=job,
-                        step=task_id))
-        print(assigned_jobs)
+                # machine = task[0]
 
-        for machine in all_machines:
-            # Sort by starting time.
-            assigned_jobs[machine].sort()
-            print(f"Machine {machine}")
-            print(assigned_jobs[machine])
-
-        return assigned_jobs
+                start_time = solver.Value(all_tasks[job, task_id].start)
+                recipes[job].steps[task_id].start = start_time
 
     elif status == cp_model.FEASIBLE:
         print("Found a feasible solution")
@@ -210,6 +178,3 @@ def optimize_recipes(recipes):
         raise Exception(f"Model is invalid {status}")
     else:
         raise Exception("Unknown error")
-
-
-

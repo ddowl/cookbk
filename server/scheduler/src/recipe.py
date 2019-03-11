@@ -3,6 +3,7 @@ class Step:
         self.duration = duration
         self.attending = attending
         self.description = description
+        self.start = None
 
 
 class Recipe:
