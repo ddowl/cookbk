@@ -1,0 +1,47 @@
+type Query {
+    info: String!
+    users: [User!]!
+    recipes: [Recipe!]!
+    recipes(userId: ID): [Recipe!]!
+}
+
+type Mutation {
+    createUser(firstName: String, lastName: String, email: String): User!
+    deleteUser(id: ID): ID
+    createRecipe(name: String, description: String, maxServingWaitTime: Int): Recipe!
+    addStepToRecipe(description: String, durationInMinutes: Int, isAttended: Boolean, recipeId: ID): RecipeStep!
+    moveStep(stepId: ID, recipeId: ID, destIdx: Int): ID
+    deleteStep(stepId: ID): ID
+    deleteRecipe(id: ID): ID
+}
+
+type Recipe {
+    id: ID!
+    name: String!
+    description: String!
+    maxServingWaitTime: Int!,
+    steps: [RecipeStep!]!
+}
+
+type RecipeStep {
+    id: ID!
+    description: String!
+    duration: Int! # in minutes
+    isAttended: Boolean!
+    recipeId: Recipe!
+}
+
+type Kitchen {
+    id: ID!
+    name: String!
+}
+
+type User {
+    id: ID!
+    firstName: String!
+    lastName: String!
+    email: String!
+    # no password for now
+    recipes: [Recipe!]!
+    kitchens: [Kitchen!]!
+}

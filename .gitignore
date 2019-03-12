@@ -4,33 +4,11 @@
 # or operating system, you probably want to add a global ignore instead:
 #   git config --global core.excludesfile '~/.gitignore_global'
 
-#######################
-# Cooking API ignores #
-#######################
-#
-# Ignore bundler config.
-.bundle
-
-# Ignore the default SQLite database.
-cooking-api/db/*.sqlite3
-cooking-api/db/*.sqlite3-journal
-
-# Ignore all logfiles and tempfiles.
-cooking-api/log/*
-cooking-api/tmp/*
-!cooking-api/log/.keep
-!cooking-api/tmp/.keep
-
-# Ignore uploaded files in development
-cooking-api/storage/*
-!cooking-api/storage/.keep
-
-cooking-api/.byebug_history
-
-# Ignore master key for decrypting credentials and more.
-cooking-api/config/master.key
-
+###############
+# API ignores #
+###############
 server/api/dist
+server/api/src/generated
 
 #############
 # Scheduler #

@@ -1,8 +1,10 @@
 {
   "compilerOptions": {
-//    "module": "system",
-    "strict": true,
-    "alwaysStrict": true,
+    "baseUrl": ".",
+    "lib": ["es2015"],
+    "module": "commonjs",
+    "target": "esNext",
+//    "strict": true,
     "outDir": "./dist",
     "removeComments": true,
     "preserveConstEnums": true,
@@ -14,8 +16,9 @@
     "src/**/*"
   ],
   "exclude": [
-    "node_modules",
-    "dist",
+    "node_modules/**/*",
+    "dist/**/*",
+    "src/generated/**/*",
     "**/*.test.ts"
   ]
 }

@@ -1,0 +1,30 @@
+type Recipe {
+    id: ID! @unique
+    name: String!
+    description: String!
+    maxServingWaitTime: Int!,
+    steps: [RecipeStep!]!
+}
+
+type RecipeStep {
+    id: ID! @unique
+    description: String!
+    duration: Int! # in minutes
+    isAttended: Boolean!
+    recipeId: Recipe!
+}
+
+type Kitchen {
+    id: ID! @unique
+    name: String!
+}
+
+type User {
+    id: ID! @unique
+    email: String! @unique
+    firstName: String!
+    lastName: String!
+    # no password for now
+    recipes: [Recipe!]!
+    kitchens: [Kitchen!]!
+}
