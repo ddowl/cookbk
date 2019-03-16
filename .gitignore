@@ -9,6 +9,7 @@
 ###############
 server/api/dist
 server/api/src/generated
+server/api/test/generated
 
 #############
 # Scheduler #

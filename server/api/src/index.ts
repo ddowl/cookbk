@@ -16,11 +16,14 @@ const resolvers = {
   Kitchen
 };
 
-const server = new GraphQLServer({
+const graphQLServer = new GraphQLServer({
   typeDefs: './src/schema.graphql',
   resolvers,
   context: { prisma },
 });
-server.start(() => console.log(`Server is running on http://localhost:4000`));
 
-export {};
+const httpServerPromise = graphQLServer.start(({port, endpoint}) => {
+  console.log(`Server is running on http://localhost:${port}${endpoint}`);
+});
+
+export { graphQLServer, httpServerPromise }

@@ -1,0 +1,10 @@
+endpoint: https://us1.prisma.sh/drew-dowling-304af4/cooking-api/test
+datamodel: ../datamodel.prisma
+
+generate:
+  - generator: typescript-client
+    output: ../../test/generated/prisma-client
+
+hooks:
+  post-deploy:
+    - prisma generate
