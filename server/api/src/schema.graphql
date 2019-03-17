@@ -1,9 +1,9 @@
 type Query {
     info: String!
-    user(id: ID): User!
+    user(id: ID!): User
+    recipe(id: ID!): Recipe
     users: [User!]!
     recipes: [Recipe!]!
-    recipe(id: ID): Recipe!
 }
 
 type Mutation {

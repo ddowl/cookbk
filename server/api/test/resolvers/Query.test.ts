@@ -74,4 +74,133 @@ describe('Query', () => {
       });
     });
   });
+
+  describe('user(id)', () => {
+    afterEach(async () => {
+      await prisma.deleteManyUsers();
+    });
+
+    const userId = "dummyId";
+
+    const query = `
+      query user($id: ID!){
+        user(id: $id) {
+          id
+        }
+      }
+    `;
+
+    describe('no users', () => {
+
+      test('returns null', async () => {
+        const result = await graphql(schema, query, rootValue, context, {id: userId});
+        expect(result.data.user).toEqual(null);
+      });
+    });
+
+    describe('some users', () => {
+      let testUser;
+      beforeEach(async () => {
+        testUser = await prisma.createUser({email: "1", firstName: "1", lastName: "1"});
+        await prisma.createUser({email: "2", firstName: "2", lastName: "2"});
+        await prisma.createUser({email: "3", firstName: "3", lastName: "3"});
+      });
+
+      describe('query for nonexistent user', () => {
+        test('returns null', async () => {
+          const result = await graphql(schema, query, rootValue, context, {id: userId});
+          expect(result.data.user).toEqual(null);
+        });
+      });
+
+      describe('query for existing user', () => {
+        test('returns that user', async () => {
+          const result = await graphql(schema, query, rootValue, context, {id: testUser.id});
+          expect(result.data.user.id).toEqual(testUser.id);
+        });
+      });
+    });
+  });
+
+  describe('recipes', () => {
+    afterEach(async () => {
+      await prisma.deleteManyRecipes();
+    });
+
+    const query = `
+      query {
+        recipes {
+          id
+        }
+      }
+    `;
+
+    describe('no recipes', () => {
+      test('returns no recipes', async () => {
+        const result = await graphql(schema, query, rootValue, context);
+        expect(result.data.recipes).toEqual([]);
+      });
+    });
+
+    describe('some recipes', () => {
+      let testRecipe;
+      beforeEach(async () => {
+        testRecipe = await prisma.createRecipe({name: "", description: "", maxServingWaitTime: 0});
+      });
+
+      test('returns all recipes', async () => {
+        const result = await graphql(schema, query, rootValue, context);
+        const recipes = result.data.recipes;
+        expect(recipes.length).toEqual(1);
+        expect(recipes[0].id).toEqual(testRecipe.id);
+      });
+    });
+  });
+
+  describe('recipe(id)', () => {
+    afterEach(async () => {
+      await prisma.deleteManyRecipes();
+    });
+
+    const recipeId = "dummyId";
+
+    const query = `
+      query recipe($id: ID!){
+        recipe(id: $id) {
+          id
+        }
+      }
+    `;
+
+    describe('no recipes', () => {
+
+      test('returns null', async () => {
+        const result = await graphql(schema, query, rootValue, context, {id: recipeId});
+        expect(result.data.recipe).toEqual(null);
+      });
+    });
+
+    describe('some recipes', () => {
+      let testRecipe;
+      beforeEach(async () => {
+        testRecipe = await prisma.createRecipe({name: "0", description: "0", maxServingWaitTime: 0});
+        await prisma.createRecipe({name: "1", description: "1", maxServingWaitTime: 1});
+        await prisma.createRecipe({name: "2", description: "2", maxServingWaitTime: 2});
+      });
+
+      describe('query for nonexistent recipe', () => {
+        test('returns null', async () => {
+          const result = await graphql(schema, query, rootValue, context, {id: recipeId});
+          expect(result.data.recipe).toEqual(null);
+        });
+      });
+
+      describe('query for existing user', () => {
+        test('returns that user', async () => {
+          const result = await graphql(schema, query, rootValue, context, {id: testRecipe.id});
+          expect(result.data.recipe.id).toEqual(testRecipe.id);
+        });
+      });
+    });
+  });
 });
