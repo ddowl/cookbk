@@ -21,8 +21,8 @@ describe('Query', () => {
     // clear DB
     await prisma.deleteManyUsers();
     await prisma.deleteManyKitchens();
-    await prisma.deleteManyRecipes();
     await prisma.deleteManyRecipeSteps();
+    await prisma.deleteManyRecipes();
     // close connection
     testHttpServerPromise.then(httpServer => httpServer.close());
   });
@@ -173,7 +173,6 @@ describe('Query', () => {
     `;
 
     describe('no recipes', () => {
-
       test('returns null', async () => {
         const result = await graphql(schema, query, rootValue, context, {id: recipeId});
         expect(result.data.recipe).toEqual(null);

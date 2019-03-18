@@ -8,19 +8,19 @@ type Query {
 
 type Mutation {
     createUser(firstName: String!, lastName: String!, email: String!): User!
-    deleteUser(id: ID!): ID!
+    deleteUser(id: ID!): ID
     createRecipe(name: String!, description: String!, maxServingWaitTime: Int): Recipe!
-    addStepToRecipe(description: String!, durationInMinutes: Int!, isAttended: Boolean!, recipeId: ID!): RecipeStep!
+    deleteRecipe(id: ID!): ID
+    addStepToRecipe(description: String!, durationInMinutes: Int!, isAttended: Boolean!, recipeId: ID!): RecipeStep
     moveStep(stepId: ID!, recipeId: ID!, destIdx: Int!): ID!
-    deleteStep(stepId: ID!): ID!
-    deleteRecipe(id: ID!): ID!
+    deleteStep(stepId: ID!): ID
 }
 
 type Recipe {
     id: ID!
     name: String!
     description: String!
-    maxServingWaitTime: Int!,
+    maxServingWaitTime: Int,
     steps: [RecipeStep!]!
 }
 
@@ -29,7 +29,7 @@ type RecipeStep {
     description: String!
     duration: Int! # in minutes
     isAttended: Boolean!
-    recipeId: Recipe!
+    recipe: Recipe!
 }
 
 type Kitchen {

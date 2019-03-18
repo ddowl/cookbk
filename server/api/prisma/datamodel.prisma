@@ -2,16 +2,17 @@ type Recipe {
     id: ID! @unique
     name: String!
     description: String!
-    maxServingWaitTime: Int!,
-    steps: [RecipeStep!]!
+    maxServingWaitTime: Int,
+    steps: [RecipeStep!]! @relation(name: "StepsInRecipe", onDelete: CASCADE)
 }
 
 type RecipeStep {
     id: ID! @unique
+    idx: Int!
     description: String!
     duration: Int! # in minutes
     isAttended: Boolean!
-    recipeId: Recipe!
+    recipe: Recipe! @relation(name: "StepsInRecipe")
 }
 
 type Kitchen {
