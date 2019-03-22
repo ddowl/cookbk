@@ -91,7 +91,6 @@ describe('Query', () => {
     `;
 
     describe('no users', () => {
-
       test('returns null', async () => {
         const result = await graphql(schema, query, rootValue, context, {id: userId});
         expect(result.data.user).toEqual(null);

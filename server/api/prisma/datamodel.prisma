@@ -17,7 +17,7 @@ type RecipeStep {
 
 type Kitchen {
     id: ID! @unique
-    name: String!
+    name: String!,
 }
 
 type User {

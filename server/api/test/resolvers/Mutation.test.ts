@@ -1,7 +1,7 @@
 import { graphql } from "graphql";
 import * as fs from 'fs';
 import { makeExecutableSchema } from 'graphql-tools';
-import {prisma, Recipe, User} from '../generated/prisma-client';  // test db client
+import { prisma, Recipe, RecipeStep, User } from '../generated/prisma-client';  // test db client
 import * as Mutation from '../../src/resolvers/Mutation';
 import { GraphQLServer } from "graphql-yoga";
 
@@ -96,23 +96,22 @@ describe('Mutation', () => {
       }
     `;
 
-    describe('deleting non-existent user', () => {
-      const id = 'nonexistent';
+    let testUser: User;
 
+    describe('no users', () => {
       test('returns null, has no effect', async () => {
         const errorMessage = 'No Node for the model User with value nonexistent for id found.';
 
-        const result = await graphql(schema, query, rootValue, context, {id});
+        const result = await graphql(schema, query, rootValue, context, {id: 'nonexistent'});
         expect(result.data.deletedUser).toEqual(null);
         expect(result.errors[0].message).toEqual(errorMessage);
         expect((await prisma.users()).length).toEqual(0);
       });
     });
 
-    describe('deleting existing user', () => {
-      let testUser: User;
+    describe('one user', () => {
       beforeEach(async () => {
-        testUser = await prisma.createUser({email: "1", firstName: "1", lastName: "1"});
+        testUser = await prisma.createUser({email: "", firstName: "", lastName: ""});
       });
 
       test('deletes the user', async () => {
@@ -120,6 +119,49 @@ describe('Mutation', () => {
         expect(result.data.deletedUser).toEqual(testUser.id);
         expect((await prisma.users()).length).toEqual(0);
       });
+
+      // Not sure we actually want this behavior
+      // Cascading deletes for recipes and their steps makes sense, but recipes _might_ be able
+      // to exist independently of users if the dependency on kitchenware isn't too strict.
+    //   describe('with populated recipes', () => {
+    //     afterEach(async () => {
+    //       await prisma.deleteManyRecipeSteps();
+    //       await prisma.deleteManyRecipes();
+    //     });
+    //
+    //     beforeEach(async () => {
+    //       await prisma.createRecipe({
+    //         name: "",
+    //         description: "",
+    //         maxServingWaitTime: 0,
+    //         steps: {
+    //           create: [
+    //             {
+    //               idx: 0,
+    //               description: "first",
+    //               duration: 0,
+    //               isAttended: true
+    //             },
+    //             {
+    //               idx: 1,
+    //               description: "second",
+    //               duration: 0,
+    //               isAttended: true
+    //             },
+    //           ]
+    //         }
+    //       });
+    //     });
+    //
+    //     test('deletes the user and all of its related data (recipe and steps)', async () => {
+    //       const result = await graphql(schema, query, rootValue, context, {id: testUser.id});
+    //       console.log(result);
+    //       expect(result.data.deletedUser).toEqual(testUser.id);
+    //       expect((await prisma.users()).length).toEqual(0);
+    //       expect((await prisma.recipes()).length).toEqual(0);
+    //       expect((await prisma.recipeSteps()).length).toEqual(0);
+    //     })
+    //   });
     });
   });
 
@@ -184,6 +226,7 @@ describe('Mutation', () => {
   describe('deleteRecipe', () => {
     afterEach(async () => {
       await prisma.deleteManyRecipes();
+      await prisma.deleteManyRecipeSteps();
     });
 
     const query =`
@@ -191,6 +234,8 @@ describe('Mutation', () => {
         deletedRecipe: deleteRecipe(id: $id)
       }
     `;
+
+    let testRecipe: Recipe;
 
     describe('deleting non-existent recipe', () => {
       const id = 'nonexistent';
@@ -205,16 +250,42 @@ describe('Mutation', () => {
       });
     });
 
-    describe('deleting existing recipe', () => {
-      let testRecipe: Recipe;
+    describe('deleting existing recipe with steps', () => {
       beforeEach(async () => {
-        testRecipe = await prisma.createRecipe({name: "1", description: "1", maxServingWaitTime: 1});
+        testRecipe = await prisma.createRecipe({
+          name: "",
+          description: "",
+          maxServingWaitTime: 0,
+          steps: {
+            create: [
+              {
+                idx: 0,
+                description: "first",
+                duration: 3,
+                isAttended: true,
+              },
+              {
+                idx: 1,
+                description: "second",
+                duration: 5,
+                isAttended: true,
+              },
+              {
+                idx: 2,
+                description: "third",
+                duration: 10,
+                isAttended: true,
+              },
+            ]
+          }
+        });
       });
 
-      test('deletes the recipe', async () => {
+      test('deletes the recipe and its steps', async () => {
         const result = await graphql(schema, query, rootValue, context, {id: testRecipe.id});
         expect(result.data.deletedRecipe).toEqual(testRecipe.id);
         expect((await prisma.recipes()).length).toEqual(0);
+        expect((await prisma.recipeSteps()).length).toEqual(0);
       });
     });
   });
@@ -320,6 +391,266 @@ describe('Mutation', () => {
         expect(steps[3].duration).toEqual(stepData.duration);
         expect(steps[3].isAttended).toEqual(stepData.isAttended);
       })
+    });
+  });
+
+  describe('moveStep', () => {
+    afterEach(async () => {
+      await prisma.deleteManyRecipeSteps();
+      await prisma.deleteManyRecipes();
+    });
+
+    const query =`
+      mutation moveStep($stepId: ID!, $recipeId: ID!, $destIdx: Int!){
+        movedStepId: moveStep(stepId: $stepId, recipeId: $recipeId, destIdx: $destIdx)
+      }
+    `;
+
+    let testStep: RecipeStep;
+    let testRecipe: Recipe;
+    let destIdx: number;
+
+    describe('moving non-existent recipe', () => {
+      testStep = { id: 'nonexistent', idx: -1, description: "", duration: 0, isAttended: true };
+      testRecipe = { id: 'nonexistent', name: "test", description: '', maxServingWaitTime: 0 };
+      destIdx = -1;
+
+      test('returns null', async () => {
+        const result = await graphql(schema, query, rootValue, context, {stepId: testStep.id, recipeId: testRecipe.id, destIdx});
+        expect(result.data.movedStepId).toEqual(null);
+      });
+    });
+
+    describe('recipe with one step exists', () => {
+      beforeEach(async () => {
+        testRecipe = await prisma.createRecipe({name: "1", description: "1", maxServingWaitTime: 1});
+        testStep = await prisma.createRecipeStep({
+          idx: 0,
+          description: "",
+          duration: 0,
+          isAttended: true,
+          recipe: {
+            connect: {
+              id: testRecipe.id
+            }
+          }
+        });
+      });
+
+      describe('moving to idx -1', () => {
+        beforeEach(() => {
+          destIdx = -1;
+        });
+
+        test('returns null', async () => {
+          const result = await graphql(schema, query, rootValue, context, {stepId: testStep.id, recipeId: testRecipe.id, destIdx});
+          expect(result.data.movedStepId).toEqual(null);
+        });
+      });
+
+      describe('moving to out of bounds idx', () => {
+        beforeEach(() => {
+          destIdx = 1;
+        });
+
+        test('returns null', async () => {
+          const result = await graphql(schema, query, rootValue, context, {stepId: testStep.id, recipeId: testRecipe.id, destIdx});
+          expect(result.data.movedStepId).toEqual(null);
+        });
+      });
+
+      describe('moving to idx 0', () => {
+        beforeEach(() => {
+          destIdx = 0;
+        });
+
+        test('returns step id, no-op', async () => {
+          const result = await graphql(schema, query, rootValue, context, {stepId: testStep.id, recipeId: testRecipe.id, destIdx});
+          expect(result.data.movedStepId).toEqual(testStep.id);
+          const steps = await prisma.recipe({id: testRecipe.id}).steps();
+          expect(steps.length).toEqual(1);
+          expect(steps[0]).toEqual(testStep);
+        });
+      });
+    });
+
+    describe('recipe with several steps exists', () => {
+      beforeEach(async () => {
+        testRecipe = await prisma.createRecipe({
+          name: "1", description: "1", maxServingWaitTime: 1,
+          steps: {
+            create: [
+              {
+                idx: 1,
+                description: "second",
+                duration: 5,
+                isAttended: true,
+              },
+              {
+                idx: 2,
+                description: "third",
+                duration: 10,
+                isAttended: true,
+              },
+              {
+                idx: 3,
+                description: "fourth",
+                duration: 13,
+                isAttended: true,
+              },
+            ]
+          }
+        });
+        testStep = await prisma.createRecipeStep({
+          idx: 0,
+          description: "first",
+          duration: 0,
+          isAttended: true,
+          recipe: {
+            connect: {
+              id: testRecipe.id
+            }
+          }
+        });
+      });
+
+      describe('moving to idx 0', () => {
+        beforeEach(() => {
+          destIdx = 0;
+        });
+
+        test('returns step id, no-op', async () => {
+          const result = await graphql(schema, query, rootValue, context, {stepId: testStep.id, recipeId: testRecipe.id, destIdx});
+          expect(result.data.movedStepId).toEqual(testStep.id);
+          const steps = await prisma.recipe({id: testRecipe.id}).steps({orderBy: "idx_ASC"});
+          expect(steps.length).toEqual(4);
+          expect(steps[destIdx].id).toEqual(testStep.id);
+        });
+      });
+
+      describe('moving to idx 1', () => {
+        beforeEach(() => {
+          destIdx = 1;
+        });
+
+        test('returns step id, moves step to 1, swaps with second step', async () => {
+          const result = await graphql(schema, query, rootValue, context, {stepId: testStep.id, recipeId: testRecipe.id, destIdx});
+          expect(result.data.movedStepId).toEqual(testStep.id);
+          const steps = await prisma.recipe({id: testRecipe.id}).steps({orderBy: "idx_ASC"});
+          expect(steps.length).toEqual(4);
+          expect(steps[0].idx).toEqual(0);
+          expect(steps[0].description).toEqual("second");
+          expect(steps[1].idx).toEqual(1);
+          expect(steps[1].description).toEqual("first");
+          expect(steps[2].idx).toEqual(2);
+          expect(steps[2].description).toEqual("third");
+          expect(steps[3].idx).toEqual(3);
+          expect(steps[3].description).toEqual("fourth");
+        });
+      });
+
+      describe('moving to idx 3', () => {
+        beforeEach(() => {
+          destIdx = 3;
+        });
+
+        test('returns step id, moves step to 3, shifts all others back', async () => {
+          const result = await graphql(schema, query, rootValue, context, {stepId: testStep.id, recipeId: testRecipe.id, destIdx});
+          expect(result.data.movedStepId).toEqual(testStep.id);
+          const steps = await prisma.recipe({id: testRecipe.id}).steps({orderBy: "idx_ASC"});
+          expect(steps.length).toEqual(4);
+          expect(steps[0].idx).toEqual(0);
+          expect(steps[0].description).toEqual("second");
+          expect(steps[1].idx).toEqual(1);
+          expect(steps[1].description).toEqual("third");
+          expect(steps[2].idx).toEqual(2);
+          expect(steps[2].description).toEqual("fourth");
+          expect(steps[3].idx).toEqual(3);
+          expect(steps[3].description).toEqual("first");
+        });
+      });
+    });
+  });
+
+  describe('deleteStep', () => {
+    afterEach(async () => {
+      await prisma.deleteManyRecipeSteps();
+      await prisma.deleteManyRecipes();
+    });
+
+    const query =`
+      mutation deleteStep($stepId: ID!, $recipeId: ID!){
+        deletedRecipeStepId: deleteStep(stepId: $stepId, recipeId: $recipeId)
+      }
+    `;
+
+    let testStep: RecipeStep;
+    let testRecipe: Recipe;
+
+    describe('deleting non-existent step', () => {
+      test('returns null, has no effect', async () => {
+        const result = await graphql(schema, query, rootValue, context, {stepId: 'nonexistent', recipeId: 'nonexistent'});
+        expect(result.data.deletedRecipeStepId).toEqual(null);
+      });
+    });
+
+    describe('recipe with one step', () => {
+      beforeEach(async () => {
+        testRecipe = await prisma.createRecipe({name: "", description: "", maxServingWaitTime: 0});
+        testStep = await prisma.createRecipeStep({idx: 0, description: "", duration: 0, isAttended: true, recipe: {connect: {id: testRecipe.id}}});
+      });
+
+      test('deletes the step', async () => {
+        const result = await graphql(schema, query, rootValue, context, {stepId: testStep.id, recipeId: testRecipe.id});
+        expect(result.data.deletedRecipeStepId).toEqual(testStep.id);
+        const steps = await prisma.recipe({id: testRecipe.id}).steps();
+        expect(steps.length).toEqual(0);
+      });
+    });
+
+    describe('recipe with several steps', () => {
+      beforeEach(async () => {
+        testRecipe = await prisma.createRecipe({
+          name: "1", description: "1", maxServingWaitTime: 1,
+          steps: {
+            create: [
+              {
+                idx: 0,
+                description: "first",
+                duration: 5,
+                isAttended: true,
+              },
+              {
+                idx: 2,
+                description: "third",
+                duration: 10,
+                isAttended: true,
+              },
+              {
+                idx: 3,
+                description: "fourth",
+                duration: 13,
+                isAttended: true,
+              },
+            ]
+          }
+        });
+        testStep = await prisma.createRecipeStep({idx: 1, description: "second", duration: 0, isAttended: true, recipe: {connect: {id: testRecipe.id}}});
+      });
+
+      test('deletes the step, reorders other steps', async () => {
+        const result = await graphql(schema, query, rootValue, context, {stepId: testStep.id, recipeId: testRecipe.id});
+        console.log(result);
+        expect(result.data.deletedRecipeStepId).toEqual(testStep.id);
+        const steps = await prisma.recipe({id: testRecipe.id}).steps();
+        expect(steps.length).toEqual(3);
+        expect(steps[0].idx).toEqual(0);
+        expect(steps[0].description).toEqual("first");
+        expect(steps[1].idx).toEqual(1);
+        expect(steps[1].description).toEqual("third");
+        expect(steps[2].idx).toEqual(2);
+        expect(steps[2].description).toEqual("fourth");
+      });
     });
   });
 });
