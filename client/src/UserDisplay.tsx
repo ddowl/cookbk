@@ -1,38 +1,41 @@
-import React, {useEffect, useState} from 'react';
+import { Query } from 'react-apollo';
+import gql from 'graphql-tag';
 
-interface User {
-  id: number,
-  name: string,
-  email: string
-}
+const USERS_QUERY = gql`
+    {
+        users {
+            id
+            firstName
+            lastName
+            email
+        }
+    }
+`;
 
 const UserDisplay = () => {
-  // Declare a new state variable, which we'll call "count"
-  const [user, setUser] = useState("");
-  useEffect(() => {
-    console.log("Called the effect!");
-    fetch("http://localhost:3001/api/users")
-      .then(res => res.json())
-      .then(
-        (result) => {
-          console.log("Got some users!");
-          result.map((user: User) => {
-            console.log(user.id);
-            console.log(user.name);
-            console.log(user.email);
-          });
-        },
-        (error) => {
-          console.log("Error occurred");
-          console.log(error);
-        }
-      );
-  });
-
   return (
     <div>
-      <a>"I'll be a user pretty soon"</a>
-      { user }
+      <Query query={USERS_QUERY}>
+        {({ loading, error, data }) => {
+          if (loading) return <div>Fetching</div>;
+          if (error) return <div>Error</div>;
+
+          // @ts-ignore
+          const users: User[] = data.users;
+
+          return (
+            <div>
+              {users.map((user, i) => (
+                <div key={i}>
+                  <h1>{user.firstName} {user.lastName}</h1>
+                  <p>{user.id}</p>
+                  <p>{user.email}</p>
+                </div>
+              ))}
+            </div>
+          );
+        }}
+      </Query>
     </div>
   );
 };
