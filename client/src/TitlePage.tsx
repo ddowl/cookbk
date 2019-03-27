@@ -1,25 +1,47 @@
-import React, {useState, useRef} from 'react';
+import React, {useState} from 'react';
 import { ButtonToolbar, Button, Modal, Form } from 'react-bootstrap';
 import ingredients from './images/ingredients.jpg';
 import './TitlePage.css';
+import { ApolloConsumer } from 'react-apollo';
+import { ApolloClient } from 'apollo-client';
+import { Query } from 'react-apollo';
+import gql from 'graphql-tag';
 
 const LoginModal = (props: any) => {
-  const emailInput = useRef(null);
-  const passwordInput = useRef(null);
-  const [validated, setValidated] = useState(false);
+  const [validatedForm, setValidatedForm] = useState(false);
+  const [enableSubmit, setEnableSubmit] = useState(true);
 
-  const handleSubmit = (event: any) => {
+  const handleSubmit = (event: any, client: ApolloClient<any>) => {
     event.preventDefault();
     const form = event.currentTarget;
     if (form.checkValidity() === false) {
       event.stopPropagation();
+      setValidatedForm(true);
+    } else {
+      const email: String = form.formBasicEmail.value;
+      const password: String = form.formBasicPassword.value;
+      console.log(email);
+      console.log(password);
+      console.log("Sign 'em up!");
+      setValidatedForm(false);
+      setEnableSubmit(false);
+      // TODO: Insert login API call
+
+      // Assume signed in for now
+      // set user metadata in global store, redirect to meal page
+      client.writeData({
+        data: {
+          user: {
+            __typename: "User",
+            isLoggedIn: true,
+            firstName: "Existing",
+            lastName: "User",
+            email: email
+          }
+        }
+      });
+
     }
-    setValidated(true);
-    console.log("form is valid :)");
-    // @ts-ignore
-    console.log(emailInput.current.value);
-    // @ts-ignore
-    console.log(passwordInput.current.value);
   };
 
   return (
@@ -28,31 +50,46 @@ const LoginModal = (props: any) => {
         <Modal.Title>Login</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <Form
-          noValidate
-          validated={validated}
-          onSubmit={(e: any) => handleSubmit(e)}
-        >
-          <Form.Group controlId="formBasicEmail">
-            {/*<Form.Label>Email address</Form.Label>*/}
-            <Form.Control required type="email" placeholder="Enter email" ref={emailInput}/>
-            <Form.Text className="text-muted">
-              We'll never share your email with anyone else.
-            </Form.Text>
-            <Form.Control.Feedback type="invalid">Please enter a valid email</Form.Control.Feedback>
-          </Form.Group>
+        <ApolloConsumer>
+          {client => (
+            <Form
+              noValidate
+              validated={validatedForm}
+              onSubmit={(e: any) => handleSubmit(e, client)}
+            >
+              <Form.Group controlId="formBasicEmail">
+                <Form.Control required type="email" placeholder="Enter email"/>
+                <Form.Text className="text-muted">
+                  We'll never share your email with anyone else.
+                </Form.Text>
+                <Form.Control.Feedback type="invalid">Please enter a valid email</Form.Control.Feedback>
+              </Form.Group>
 
-          <Form.Group controlId="formBasicPassword">
-            {/*<Form.Label>Password</Form.Label>*/}
-            <Form.Control required type="password" placeholder="Password" ref={passwordInput}/>
-            {/* TODO: make password validations */}
-          </Form.Group>
-          <Button type="submit">Submit</Button>
-        </Form>
+              <Form.Group controlId="formBasicPassword">
+                <Form.Control required type="password" placeholder="Password"/>
+                {/* TODO: make password validations */}
+              </Form.Group>
+              <Button type="submit" disabled={!enableSubmit}>Submit</Button>
+            </Form>
+          )}
+        </ApolloConsumer>
+
       </Modal.Body>
     </Modal>
   );
 };
+
+
+const GET_USER_METADATA = gql`
+    query {
+        user @client {
+            isLoggedIn
+            firstName
+            lastName
+            email
+        }
+    }
+`;
 
 const TitlePage = () => {
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -87,11 +124,28 @@ const TitlePage = () => {
           or
           <Button className="signup-button" variant="secondary" onClick={handleSignup}>Signup</Button>
         </ButtonToolbar>
+        <LoginModal show={showLoginModal} handleClose={handleClose}/>
       </header>
-      <LoginModal show={showLoginModal} handleClose={handleClose}/>
+      <Query query={GET_USER_METADATA}>
+        {({data: { user } }) => {
+          console.log(user.isLoggedIn);
+          console.log(user.firstName);
+          console.log(user.lastName);
+          console.log(user.email);
+          return (
+            <div>
+              <ul>isLoggedIn: {user.isLoggedIn.toString()}</ul>
+              <ul>firstName: {user.firstName}</ul>
+              <ul>lastName: {user.lastName}</ul>
+              <ul>email: {user.email}</ul>
+            </div>
+          );
+        }}
+      </Query>
       <p>More content will go down here later!</p>
     </div>
   );
 };
 
 export default TitlePage;
+
