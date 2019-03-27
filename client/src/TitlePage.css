@@ -1,8 +1,8 @@
-.App {
+.TitlePage {
   text-align: center;
 }
 
-.App-header {
+.TitlePage-header {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
