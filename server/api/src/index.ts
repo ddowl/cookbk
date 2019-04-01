@@ -2,6 +2,8 @@ require('dotenv').config();
 
 import { GraphQLServer } from 'graphql-yoga';
 import { prisma } from './generated/prisma-client';
+import session from 'express-session';
+import ms from 'ms';
 import * as Query from './resolvers/Query';
 import * as Mutation from './resolvers/Mutation';
 import * as User from './resolvers/User';
@@ -18,13 +20,40 @@ const resolvers = {
   Kitchen
 };
 
+const context = (req) => ({
+  prisma,
+  req: req.request
+});
+
 const graphQLServer = new GraphQLServer({
   typeDefs: './src/schema.graphql',
   resolvers,
-  context: { prisma },
+  context,
 });
 
-const httpServerPromise = graphQLServer.start(({port, endpoint}) => {
+// session middleware
+graphQLServer.express.use(
+  session({
+    name: 'qid',
+    secret: `some-random-secret-here`,
+    resave: false,
+    saveUninitialized: true,
+    cookie: {
+      secure: false, // change to process.env.NODE_ENV === 'production' when HTTPS is set up
+      maxAge: ms('1d'),
+    }
+  })
+);
+
+const serverOpts = {
+  port: 4000,
+  cors: {
+    credentials: true,
+    origin: ['http://localhost:3000'], // frontend url
+  }
+};
+
+const httpServerPromise = graphQLServer.start(serverOpts,({port, endpoint}) => {
   console.log(`Server is running on http://localhost:${port}${endpoint}`);
 });
 

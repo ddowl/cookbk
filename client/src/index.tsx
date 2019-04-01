@@ -11,7 +11,8 @@ import { createHttpLink } from 'apollo-link-http';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 
 const httpLink = createHttpLink({
-  uri: 'http://localhost:4000'
+  uri: 'http://localhost:4000',
+  credentials: 'same-origin'
 });
 
 const cache = new InMemoryCache();

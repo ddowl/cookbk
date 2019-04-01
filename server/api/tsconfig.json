@@ -6,6 +6,7 @@
     "target": "esNext",
 //    "strict": true,
     "outDir": "./dist",
+    "esModuleInterop": true,
     "removeComments": true,
     "preserveConstEnums": true,
     "sourceMap": true,
