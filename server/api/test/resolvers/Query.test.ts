@@ -63,7 +63,7 @@ describe('Query', () => {
     describe('some users', () => {
       let testUser;
       beforeEach(async () => {
-        testUser = await prisma.createUser({email: "", firstName: "", lastName: ""});
+        testUser = await prisma.createUser({email: "", encryptedPassword: ""});
       });
 
       test('returns all users', async () => {
@@ -100,9 +100,9 @@ describe('Query', () => {
     describe('some users', () => {
       let testUser;
       beforeEach(async () => {
-        testUser = await prisma.createUser({email: "1", firstName: "1", lastName: "1"});
-        await prisma.createUser({email: "2", firstName: "2", lastName: "2"});
-        await prisma.createUser({email: "3", firstName: "3", lastName: "3"});
+        testUser = await prisma.createUser({email: "1", encryptedPassword: "1"});
+        await prisma.createUser({email: "2", encryptedPassword: "2"});
+        await prisma.createUser({email: "3", encryptedPassword: "3"});
       });
 
       describe('query for nonexistent user', () => {

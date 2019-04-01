@@ -1,5 +1,38 @@
-async function createUser(parent, args, context, info) {
-  return context.prisma.createUser(args);
+import * as bcrypt from 'bcrypt';
+import { BCRYPT_SALT_ROUNDS } from "../constants";
+
+async function login(parent, args, context, info) {
+  const user = await context.prisma.user({ email: args.email });
+  if (!user) {
+    throw new Error("Cannot login non-existent user");
+  }
+
+  if (await bcrypt.compare(args.password, user.encryptedPassword)) {
+    // matching password!
+    // set cookie and return true
+
+    return true;
+  } else {
+    return false;
+  }
+}
+
+async function signup(parent, args, context, info) {
+  const userExists = await context.prisma.$exists.user({ email: args.email });
+  if (userExists) {
+    throw new Error("Cannot signup existing user");
+  }
+
+  const encryptedPassword = await bcrypt.hash(args.password, BCRYPT_SALT_ROUNDS);
+
+  const newUser = await context.prisma.createUser({
+    email: args.email,
+    encryptedPassword: encryptedPassword
+  });
+
+  // set cookie
+
+  return newUser;
 }
 
 async function deleteUser(parent, args, context, info) {
@@ -94,7 +127,8 @@ async function deleteStep(parent, args, context, info) {
 }
 
 export {
-  createUser,
+  login,
+  signup,
   deleteUser,
   createRecipe,
   deleteRecipe,

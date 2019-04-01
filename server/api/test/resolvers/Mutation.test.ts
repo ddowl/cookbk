@@ -1,9 +1,11 @@
 import { graphql } from "graphql";
-import * as fs from 'fs';
+import { GraphQLServer } from "graphql-yoga";
 import { makeExecutableSchema } from 'graphql-tools';
+import * as fs from 'fs';
 import { prisma, Recipe, RecipeStep, User } from '../generated/prisma-client';  // test db client
 import * as Mutation from '../../src/resolvers/Mutation';
-import { GraphQLServer } from "graphql-yoga";
+import * as bcrypt  from 'bcrypt';
+import { BCRYPT_SALT_ROUNDS } from '../../src/constants';
 
 const schemaFileName = 'src/schema.graphql';
 const typeDefs = fs.readFileSync(schemaFileName, 'utf-8');
@@ -12,9 +14,10 @@ const resolvers = { Mutation };
 const schema = makeExecutableSchema({typeDefs, resolvers});
 let rootValue = {};
 let context = { prisma };
+let port = 1234;
 
 const testGraphQLServer = new GraphQLServer({ schema, context });
-const testHttpServerPromise = testGraphQLServer.start({port: 1234});
+const testHttpServerPromise = testGraphQLServer.start({ port });
 
 describe('Mutation', () => {
   afterAll(async () => {
@@ -29,61 +32,98 @@ describe('Mutation', () => {
     testHttpServerPromise.then(httpServer => httpServer.close());
   });
 
-  // Users
-
-  describe('createUser', () => {
+  // TODO: not sure how to test setting session/auth cookie
+  // Is a headless browser integration test the only way to access cookies?
+  describe('login', () => {
     afterEach(async () => {
       await prisma.deleteManyUsers();
     });
 
     const query = `
-      mutation createUser($firstName: String!, $lastName: String!, $email: String!){
-        newUser: createUser(firstName: $firstName, lastName: $lastName, email: $email) {
-          firstName
-          lastName
+      mutation login($email: String!, $password: String!) {
+        loginSuccessful: login(email: $email, password: $password)
+      }
+    `;
+
+    let email;
+    let plaintextPassword;
+
+    describe('non-existent user credentials', () => {
+      beforeEach(async () => {
+        email = 'nonexistent';
+        plaintextPassword = 'nonexistent';
+      });
+
+      test('returns error message, cookie not set', async () => {
+        const result = await graphql(schema, query, rootValue, context, {email: email, password: plaintextPassword});
+        const errorMessage = 'Cannot login non-existent user';
+        expect(result.errors[0].message).toEqual(errorMessage);
+        expect(result.data).toEqual(null);
+      });
+    });
+    describe('existing user', () => {
+      beforeEach(async () => {
+        email = 'email';
+        plaintextPassword = 'plaintext';
+        const encryptedPassword = await bcrypt.hash(plaintextPassword, BCRYPT_SALT_ROUNDS);
+        await prisma.createUser({email: email, encryptedPassword: encryptedPassword});
+      });
+
+      test('returns true, cookie set with auth token', async () => {
+        const result = await graphql(schema, query, rootValue, context, {email: email, password: plaintextPassword});
+        expect(result.data.loginSuccessful).toEqual(true);
+      });
+    });
+  });
+
+  describe('signup', () => {
+    afterEach(async () => {
+      await prisma.deleteManyUsers();
+    });
+
+    const query = `
+      mutation signup($email: String!, $password: String!) {
+        newUser: signup(email: $email, password: $password) {
+          id
           email
         }
       }
     `;
 
-    const userData = {firstName: "First", lastName: "Lastman", email: "first.lastman@gmail.com"};
+    let email;
+    let plaintextPassword;
 
-    describe('no users', () => {
-      describe('create a user with distinct fields', () => {
-        test('creates a new user', async () => {
-          const result = await graphql(schema, query, rootValue, context, userData);
-          expect(result.data.newUser).toEqual(userData);
-          expect((await prisma.users()).length).toEqual(1);
-        });
+    describe('non-existent user credentials', () => {
+      beforeEach(async () => {
+        email = 'nonexistent';
+        plaintextPassword = 'nonexistent';
+      });
+
+      test('returns true, cookie set with auth token', async () => {
+        const result = await graphql(schema, query, rootValue, context, {email: email, password: plaintextPassword});
+        expect(result.data.newUser.email).toEqual(email);
+        expect(result.data.newUser.id).toBeDefined();
       });
     });
 
-    describe('one user', () => {
-      let testUser: User;
+    describe('existing user', () => {
       beforeEach(async () => {
-        testUser = await prisma.createUser({email: "1", firstName: "1", lastName: "1"});
+        email = 'email';
+        plaintextPassword = 'plaintext';
+        const encryptedPassword = await bcrypt.hash(plaintextPassword, BCRYPT_SALT_ROUNDS);
+        await prisma.createUser({email: email, encryptedPassword: encryptedPassword});
       });
 
-      describe('create a user with distinct fields', () => {
-        test('creates a new user', async () => {
-          const result = await graphql(schema, query, rootValue, context, userData);
-          expect(result.data.newUser).toEqual(userData);
-          expect((await prisma.users()).length).toEqual(2);
-        });
-      });
-
-      describe('creating user with same email', () => {
-        test('violates uniqueness', async () => {
-          const userData = {firstName: "First", lastName: "Lastman", email: testUser.email};
-          const errorMessage = 'A unique constraint would be violated on User. Details: Field name = email';
-
-          const result = await graphql(schema, query, rootValue, context, userData);
-          expect(result.errors[0].message).toEqual(errorMessage);
-          expect((await prisma.users()).length).toEqual(1);
-        });
+      test('returns error message, cookie not set', async () => {
+        const result = await graphql(schema, query, rootValue, context, {email: email, password: plaintextPassword});
+        const errorMessage = 'Cannot signup existing user';
+        expect(result.errors[0].message).toEqual(errorMessage);
+        expect(result.data.newUser).toEqual(null);
       });
     });
   });
+
+  // Users
 
   describe('deleteUser', () => {
     afterEach(async () => {
@@ -111,7 +151,7 @@ describe('Mutation', () => {
 
     describe('one user', () => {
       beforeEach(async () => {
-        testUser = await prisma.createUser({email: "", firstName: "", lastName: ""});
+        testUser = await prisma.createUser({email: "", encryptedPassword: ""});
       });
 
       test('deletes the user', async () => {
@@ -640,7 +680,6 @@ describe('Mutation', () => {
 
       test('deletes the step, reorders other steps', async () => {
         const result = await graphql(schema, query, rootValue, context, {stepId: testStep.id, recipeId: testRecipe.id});
-        console.log(result);
         expect(result.data.deletedRecipeStepId).toEqual(testStep.id);
         const steps = await prisma.recipe({id: testRecipe.id}).steps();
         expect(steps.length).toEqual(3);

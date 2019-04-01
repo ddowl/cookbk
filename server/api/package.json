@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@types/node": "^11.11.1",
+    "bcrypt": "^3.0.5",
     "dotenv": "^7.0.0",
     "graphql-yoga": "^1.17.4",
     "prisma-client-lib": "^1.28.3",

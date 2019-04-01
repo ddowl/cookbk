@@ -7,7 +7,8 @@ type Query {
 }
 
 type Mutation {
-    createUser(firstName: String!, lastName: String!, email: String!): User!
+    login(email: String!, password: String!): Boolean!
+    signup(email: String!, password: String!): User
     deleteUser(id: ID!): ID
     createRecipe(name: String!, description: String!, maxServingWaitTime: Int): Recipe!
     deleteRecipe(id: ID!): ID
@@ -39,10 +40,10 @@ type Kitchen {
 
 type User {
     id: ID!
-    firstName: String!
-    lastName: String!
+    firstName: String
+    lastName: String
     email: String!
-    # no password for now
+    # client shouldn't have access to encrypted password
     recipes: [Recipe!]!
     kitchens: [Kitchen!]!
 }
