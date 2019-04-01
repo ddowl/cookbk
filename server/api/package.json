@@ -10,13 +10,14 @@
     "ts-jest": "^24.0.0"
   },
   "scripts": {
-    "start": "node dist/index.js",
+    "start": "node -r dotenv/config dist/index.js dotenv_config_path=config/.env.dev",
     "compile": "tsc",
     "compileWatch": "tsc -w",
-    "test": "jest"
+    "test": "ENDPOINT_URL=https://us1.prisma.sh/drew-dowling-304af4/cooking-api/test jest"
   },
   "dependencies": {
     "@types/node": "^11.11.1",
+    "dotenv": "^7.0.0",
     "graphql-yoga": "^1.17.4",
     "prisma-client-lib": "^1.28.3",
     "typescript": "^3.3.3333"
