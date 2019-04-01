@@ -1,6 +1,7 @@
 require('dotenv').config();
 
 import { GraphQLServer } from 'graphql-yoga';
+import { ContextParameters } from "graphql-yoga/dist/types";
 import { prisma } from './generated/prisma-client';
 import session from 'express-session';
 import ms from 'ms';
@@ -20,10 +21,7 @@ const resolvers = {
   Kitchen
 };
 
-const context = (req) => ({
-  prisma,
-  req: req.request
-});
+const context = (req: ContextParameters) => ({ prisma, req });
 
 const graphQLServer = new GraphQLServer({
   typeDefs: './src/schema.graphql',
