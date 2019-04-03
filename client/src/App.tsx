@@ -5,7 +5,7 @@ import TitlePage from "./TitlePage";
 import RecipesPage from "./RecipesPage";
 import KitchensPage from "./KitchensPage";
 import MealPage from "./MealPage";
-import UserSettingsPage from "./SettingsPage";
+import UserSettingsPage from "./UserSettingsPage";
 
 const App = () => {
   return (
