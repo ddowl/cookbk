@@ -1,47 +1,44 @@
-import React, {useState} from 'react';
-import { ButtonToolbar, Button, Modal, Form } from 'react-bootstrap';
-import ingredients from './images/ingredients.jpg';
 import './TitlePage.css';
+
+import React, {useState} from 'react';
+import { ButtonToolbar, Button, Modal } from 'react-bootstrap';
+import { Formik, Field, Form, ErrorMessage } from 'formik';
+import * as Yup from 'yup';
+import ingredients from './images/ingredients.jpg';
 import { ApolloConsumer } from 'react-apollo';
 import { ApolloClient } from 'apollo-client';
 import { Query } from 'react-apollo';
 import gql from 'graphql-tag';
 
+const LoginSchema = Yup.object().shape({
+  email: Yup.string()
+    .email('Invalid email')
+    .required('Required'),
+  password: Yup.string()
+    .required('Required')
+  // TODO: Can enforce password reqs here! :)
+});
+
 const LoginModal = (props: any) => {
-  const [validatedForm, setValidatedForm] = useState(false);
-  const [enableSubmit, setEnableSubmit] = useState(true);
+  const handleSubmit = ({email, password}: { email: string, password: string}, client: ApolloClient<any>) => {
+    console.log(email);
+    console.log(password);
+    console.log("Log 'em in!");
+    // TODO: Insert login API call
 
-  const handleSubmit = (event: any, client: ApolloClient<any>) => {
-    event.preventDefault();
-    const form = event.currentTarget;
-    if (form.checkValidity() === false) {
-      event.stopPropagation();
-      setValidatedForm(true);
-    } else {
-      const email: String = form.formBasicEmail.value;
-      const password: String = form.formBasicPassword.value;
-      console.log(email);
-      console.log(password);
-      console.log("Sign 'em up!");
-      setValidatedForm(false);
-      setEnableSubmit(false);
-      // TODO: Insert login API call
-
-      // Assume signed in for now
-      // set user metadata in global store, redirect to meal page
-      client.writeData({
-        data: {
-          user: {
-            __typename: "User",
-            isLoggedIn: true,
-            firstName: "Existing",
-            lastName: "User",
-            email: email
-          }
+    // Assume signed in for now
+    // set user metadata in global store, redirect to meal page
+    client.writeData({
+      data: {
+        user: {
+          __typename: "User",
+          isLoggedIn: true,
+          firstName: "Existing",
+          lastName: "User",
+          email: email
         }
-      });
-
-    }
+      }
+    });
   };
 
   return (
@@ -52,33 +49,43 @@ const LoginModal = (props: any) => {
       <Modal.Body>
         <ApolloConsumer>
           {client => (
-            <Form
-              noValidate
-              validated={validatedForm}
-              onSubmit={(e: any) => handleSubmit(e, client)}
-            >
-              <Form.Group controlId="formBasicEmail">
-                <Form.Control required type="email" placeholder="Enter email"/>
-                <Form.Text className="text-muted">
-                  We'll never share your email with anyone else.
-                </Form.Text>
-                <Form.Control.Feedback type="invalid">Please enter a valid email</Form.Control.Feedback>
-              </Form.Group>
+            <Formik
+              initialValues={{
+                email: '',
+                password: ''
+              }}
+              validationSchema={LoginSchema}
+              onSubmit={(values, actions) => {
+                actions.setSubmitting(false);
+                handleSubmit(values, client);
+                props.handleClose();
+              }}
+              render={({ errors, status, touched, isSubmitting }) => (
+                // TODO: improve form CSS on invalid
+                <Form>
+                  <div className="form-group">
+                    <Field type="email" name="email" className="form-control" placeholder="Email" />
+                    <ErrorMessage name="email" component="div" />
+                  </div>
 
-              <Form.Group controlId="formBasicPassword">
-                <Form.Control required type="password" placeholder="Password"/>
-                {/* TODO: make password validations */}
-              </Form.Group>
-              <Button type="submit" disabled={!enableSubmit}>Submit</Button>
-            </Form>
+                  <div className="form-group">
+                    <Field type="password" name="password" className="form-control" placeholder="Password" />
+                    <ErrorMessage name="password">
+                      {errorMessage => <div className="error">{errorMessage}</div>}
+                    </ErrorMessage>
+                  </div>
+
+                  {status && status.msg && <div>{status.msg}</div>}
+                  <Button type="submit" disabled={isSubmitting}>Submit</Button>
+                </Form>
+              )}
+            />
           )}
         </ApolloConsumer>
-
       </Modal.Body>
     </Modal>
   );
 };
-
 
 const GET_USER_METADATA = gql`
     query {
@@ -125,13 +132,10 @@ const TitlePage = () => {
           <Button className="signup-button" variant="secondary" onClick={handleSignup}>Signup</Button>
         </ButtonToolbar>
         <LoginModal show={showLoginModal} handleClose={handleClose}/>
+        {/*<SignupModal show={showSignupModal} handleClose={handleClose}/>*/}
       </header>
       <Query query={GET_USER_METADATA}>
         {({data: { user } }) => {
-          console.log(user.isLoggedIn);
-          console.log(user.firstName);
-          console.log(user.lastName);
-          console.log(user.email);
           return (
             <div>
               <ul>isLoggedIn: {user.isLoggedIn.toString()}</ul>
@@ -148,4 +152,3 @@ const TitlePage = () => {
 };
 
 export default TitlePage;
-
