@@ -33,8 +33,6 @@ const LoginModal = (props: any) => {
         user: {
           __typename: "User",
           isLoggedIn: true,
-          firstName: "Existing",
-          lastName: "User",
           email: email
         }
       }
@@ -161,8 +159,6 @@ const GET_USER_METADATA = gql`
     query {
         user @client {
             isLoggedIn
-            firstName
-            lastName
             email
         }
     }
@@ -209,8 +205,6 @@ const TitlePage = () => {
           return (
             <div>
               <ul>isLoggedIn: {user.isLoggedIn.toString()}</ul>
-              <ul>firstName: {user.firstName}</ul>
-              <ul>lastName: {user.lastName}</ul>
               <ul>email: {user.email}</ul>
             </div>
           );

@@ -26,8 +26,6 @@ const data = {
   user: {
     __typename: 'User',
     isLoggedIn: false,
-    firstName: null,
-    lastName: null,
     email: null
   }
 };

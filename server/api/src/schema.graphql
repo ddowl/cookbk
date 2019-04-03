@@ -40,8 +40,6 @@ type Kitchen {
 
 type User {
     id: ID!
-    firstName: String
-    lastName: String
     email: String!
     # client shouldn't have access to encrypted password
     recipes: [Recipe!]!

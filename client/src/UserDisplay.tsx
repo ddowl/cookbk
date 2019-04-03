@@ -6,8 +6,6 @@ const USERS_QUERY = gql`
     {
         users {
             id
-            firstName
-            lastName
             email
         }
     }
@@ -28,7 +26,6 @@ const UserDisplay = () => {
             <div>
               {users.map((user, i) => (
                 <div key={i}>
-                  <h1>{user.firstName} {user.lastName}</h1>
                   <p>{user.id}</p>
                   <p>{user.email}</p>
                 </div>
