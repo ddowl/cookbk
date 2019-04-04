@@ -5,10 +5,12 @@ import { ButtonToolbar, Button, Modal } from 'react-bootstrap';
 import { Formik, Field, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import ingredients from './images/ingredients.jpg';
-import { ApolloConsumer } from 'react-apollo';
+import {ApolloConsumer, FetchResult} from 'react-apollo';
 import { ApolloClient } from 'apollo-client';
 import { Query } from 'react-apollo';
 import gql from 'graphql-tag';
+import {DataProxy} from 'apollo-cache';
+import Mutation from "react-apollo/Mutation";
 
 const LoginSchema = Yup.object().shape({
   email: Yup.string()
@@ -85,6 +87,16 @@ const LoginModal = (props: any) => {
   );
 };
 
+
+const SIGNUP_USER = gql`
+  mutation SignupUser($email: String!, $password: String!) {
+      newUser: signup(email: $email, password: $password) {
+          id
+          email
+      }
+  }
+`;
+
 const SignupSchema = Yup.object().shape({
   email: Yup.string()
     .email('Invalid email')
@@ -98,11 +110,12 @@ const SignupSchema = Yup.object().shape({
 });
 
 const SignupModal = (props: any) => {
-  const handleSubmit = ({email, password}: { email: string, password: string}, client: ApolloClient<any>) => {
-    console.log(email);
-    console.log(password);
-    console.log("Sign 'em up!");
-    // TODO: Insert signup API call
+  const handleSignupUpdate = (cache: DataProxy, mutationResult: FetchResult) => {
+    props.handleClose();
+    cache.writeQuery({
+      query: GET_USER_METADATA,
+      data: { user: { __typename: "User", isLoggedIn: true, email: mutationResult.data!.newUser.email } },
+    });
   };
 
   return (
@@ -111,8 +124,8 @@ const SignupModal = (props: any) => {
         <Modal.Title>Signup</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <ApolloConsumer>
-          {client => (
+        <Mutation mutation={SIGNUP_USER} update={handleSignupUpdate}>
+          {(signupUser, { loading, error }) => (
             <Formik
               initialValues={{
                 email: '',
@@ -120,12 +133,12 @@ const SignupModal = (props: any) => {
                 confirmPassword: ''
               }}
               validationSchema={SignupSchema}
-              onSubmit={(values, actions) => {
+              onSubmit={(formValues, actions) => {
                 actions.setSubmitting(false);
-                handleSubmit(values, client);
-                props.handleClose();
+                signupUser({ variables: formValues })
               }}
-              render={({ errors, status, touched, isSubmitting }) => (
+            >
+              {({ errors, status, touched, isSubmitting }) => (
                 // TODO: improve form CSS on invalid
                 <Form>
                   <div className="form-group">
@@ -145,11 +158,13 @@ const SignupModal = (props: any) => {
 
                   {status && status.msg && <div>{status.msg}</div>}
                   <Button type="submit" disabled={isSubmitting}>Submit</Button>
+                  {loading && <p>Loading...</p>}
+                  {error && <p>Error :( Please try again</p>}
                 </Form>
               )}
-            />
+            </Formik>
           )}
-        </ApolloConsumer>
+        </Mutation>
       </Modal.Body>
     </Modal>
   );
@@ -202,6 +217,7 @@ const TitlePage = () => {
       </header>
       <Query query={GET_USER_METADATA}>
         {({data: { user } }) => {
+          console.log(user);
           return (
             <div>
               <ul>isLoggedIn: {user.isLoggedIn.toString()}</ul>
