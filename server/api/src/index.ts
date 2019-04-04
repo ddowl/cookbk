@@ -32,7 +32,7 @@ const graphQLServer = new GraphQLServer({
 // session middleware
 graphQLServer.express.use(
   session({
-    name: 'qid',
+    name: 'cookbook.sid',
     secret: `some-random-secret-here`,
     resave: false,
     saveUninitialized: true,
