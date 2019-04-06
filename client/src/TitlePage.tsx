@@ -5,12 +5,21 @@ import { ButtonToolbar, Button, Modal } from 'react-bootstrap';
 import { Formik, Field, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import ingredients from './images/ingredients.jpg';
-import {ApolloConsumer, FetchResult} from 'react-apollo';
-import { ApolloClient } from 'apollo-client';
+import {FetchResult} from 'react-apollo';
 import { Query } from 'react-apollo';
 import gql from 'graphql-tag';
 import {DataProxy} from 'apollo-cache';
 import Mutation from "react-apollo/Mutation";
+
+
+const LOGIN_USER = gql`
+    mutation LoginUser($email: String!, $password: String!) {
+        existingUser: login(email: $email, password: $password) {
+            id
+            email
+        }
+    }
+`;
 
 const LoginSchema = Yup.object().shape({
   email: Yup.string()
@@ -22,22 +31,11 @@ const LoginSchema = Yup.object().shape({
 });
 
 const LoginModal = (props: any) => {
-  const handleSubmit = ({email, password}: { email: string, password: string}, client: ApolloClient<any>) => {
-    console.log(email);
-    console.log(password);
-    console.log("Log 'em in!");
-    // TODO: Insert login API call
-
-    // Assume signed in for now
-    // set user metadata in global store, redirect to meal page
-    client.writeData({
-      data: {
-        user: {
-          __typename: "User",
-          isLoggedIn: true,
-          email: email
-        }
-      }
+  const handleLoginUpdate = (cache: DataProxy, mutationResult: FetchResult) => {
+    props.handleClose();
+    cache.writeQuery({
+      query: GET_USER_METADATA,
+      data: { user: { __typename: "User", isLoggedIn: true, email: mutationResult.data!.existingUser.email } },
     });
   };
 
@@ -47,18 +45,17 @@ const LoginModal = (props: any) => {
         <Modal.Title>Login</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <ApolloConsumer>
-          {client => (
+        <Mutation mutation={LOGIN_USER} update={handleLoginUpdate}>
+          {(loginUser, { loading, error }) => (
             <Formik
               initialValues={{
                 email: '',
                 password: ''
               }}
               validationSchema={LoginSchema}
-              onSubmit={(values, actions) => {
+              onSubmit={(formValues, actions) => {
                 actions.setSubmitting(false);
-                handleSubmit(values, client);
-                props.handleClose();
+                loginUser({ variables: formValues })
               }}
               render={({ errors, status, touched, isSubmitting }) => (
                 // TODO: improve form CSS on invalid
@@ -77,11 +74,13 @@ const LoginModal = (props: any) => {
 
                   {status && status.msg && <div>{status.msg}</div>}
                   <Button type="submit" disabled={isSubmitting}>Submit</Button>
+                  {loading && <p>Loading...</p>}
+                  {error && <p>Error :( Please try again { errors }</p>}
                 </Form>
               )}
             />
           )}
-        </ApolloConsumer>
+        </Mutation>
       </Modal.Body>
     </Modal>
   );
@@ -159,7 +158,7 @@ const SignupModal = (props: any) => {
                   {status && status.msg && <div>{status.msg}</div>}
                   <Button type="submit" disabled={isSubmitting}>Submit</Button>
                   {loading && <p>Loading...</p>}
-                  {error && <p>Error :( Please try again</p>}
+                  {error && <p>Error :( Please try again { errors }</p>}
                 </Form>
               )}
             </Formik>
