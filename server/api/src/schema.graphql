@@ -7,7 +7,7 @@ type Query {
 }
 
 type Mutation {
-    login(email: String!, password: String!): Boolean!
+    login(email: String!, password: String!): User
     signup(email: String!, password: String!): User
     deleteUser(id: ID!): ID
     createRecipe(name: String!, description: String!, maxServingWaitTime: Int): Recipe!

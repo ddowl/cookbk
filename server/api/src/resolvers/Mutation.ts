@@ -9,12 +9,10 @@ async function login(parent, args, context, info) {
 
   if (await bcrypt.compare(args.password, user.encryptedPassword)) {
     // matching password!
-    // set cookie and return true
+    // set cookie
 
-    return true;
-  } else {
-    return false;
   }
+  return user;
 }
 
 async function signup(parent, args, context, info) {

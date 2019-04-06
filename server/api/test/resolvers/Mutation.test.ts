@@ -41,7 +41,10 @@ describe('Mutation', () => {
 
     const query = `
       mutation login($email: String!, $password: String!) {
-        loginSuccessful: login(email: $email, password: $password)
+        existingUser: login(email: $email, password: $password) {
+          id
+          email
+        }
       }
     `;
 
@@ -58,7 +61,7 @@ describe('Mutation', () => {
         const result = await graphql(schema, query, rootValue, context, {email: email, password: plaintextPassword});
         const errorMessage = 'Cannot login non-existent user';
         expect(result.errors[0].message).toEqual(errorMessage);
-        expect(result.data).toEqual(null);
+        expect(result.data.existingUser).toEqual(null);
       });
     });
     describe('existing user', () => {
@@ -71,7 +74,8 @@ describe('Mutation', () => {
 
       test('returns true, cookie set with auth token', async () => {
         const result = await graphql(schema, query, rootValue, context, {email: email, password: plaintextPassword});
-        expect(result.data.loginSuccessful).toEqual(true);
+        expect(result.data.existingUser.id).toBeDefined();
+        expect(result.data.existingUser.email).toEqual(email);
       });
     });
   });
