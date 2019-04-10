@@ -5,17 +5,8 @@ import { DataProxy } from 'apollo-cache';
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import * as Yup from "yup";
 import Mutation from "react-apollo/Mutation";
-import gql from 'graphql-tag';
 import { GET_USER_METADATA } from "./queries";
-
-const LOGIN_USER = gql`
-    mutation LoginUser($email: String!, $password: String!) {
-        existingUser: login(email: $email, password: $password) {
-            id
-            email
-        }
-    }
-`;
+import { LOGIN_USER } from "./mutations";
 
 const LoginSchema = Yup.object().shape({
   email: Yup.string()

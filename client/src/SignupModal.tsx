@@ -5,17 +5,8 @@ import { Button, Modal } from "react-bootstrap";
 import Mutation from "react-apollo/Mutation";
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import * as Yup from "yup";
-import gql from 'graphql-tag';
 import { GET_USER_METADATA } from "./queries";
-
-const SIGNUP_USER = gql`
-    mutation SignupUser($email: String!, $password: String!) {
-        newUser: signup(email: $email, password: $password) {
-            id
-            email
-        }
-    }
-`;
+import { SIGNUP_USER } from "./mutations";
 
 const SignupSchema = Yup.object().shape({
   email: Yup.string()
