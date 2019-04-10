@@ -12,7 +12,7 @@ async function login(parent, args, context, info) {
 
     return user;
   } else {
-    return null;
+    throw new Error("Incorrect password");
   }
 }
 

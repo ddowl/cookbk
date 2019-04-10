@@ -93,8 +93,10 @@ describe('Mutation', () => {
           passwordParam = 'some other password';
         });
 
-        test('returns true, cookie set with auth token', async () => {
+        test('throws an error indicating the password was wrong', async () => {
           const result = await graphql(schema, query, rootValue, context, {email: email, password: passwordParam});
+          const errorMessage = 'Incorrect password';
+          expect(result.errors[0].message).toEqual(errorMessage);
           expect(result.data.existingUser).toBeNull();
         });
       });
@@ -144,7 +146,7 @@ describe('Mutation', () => {
         const result = await graphql(schema, query, rootValue, context, {email: email, password: plaintextPassword});
         const errorMessage = 'Cannot signup existing user';
         expect(result.errors[0].message).toEqual(errorMessage);
-        expect(result.data.newUser).toEqual(null);
+        expect(result.data.newUser).toBeNull();
       });
     });
   });
