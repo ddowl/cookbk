@@ -64,6 +64,8 @@ describe('Mutation', () => {
         expect(result.data.existingUser).toEqual(null);
       });
     });
+
+
     describe('existing user', () => {
       beforeEach(async () => {
         email = 'email';
@@ -72,11 +74,31 @@ describe('Mutation', () => {
         await prisma.createUser({email: email, encryptedPassword: encryptedPassword});
       });
 
-      test('returns true, cookie set with auth token', async () => {
-        const result = await graphql(schema, query, rootValue, context, {email: email, password: plaintextPassword});
-        expect(result.data.existingUser.id).toBeDefined();
-        expect(result.data.existingUser.email).toEqual(email);
+      let passwordParam;
+
+      describe('correct password', () => {
+        beforeEach(async () => {
+          passwordParam = plaintextPassword;
+        });
+
+        test('returns true, cookie set with auth token', async () => {
+          const result = await graphql(schema, query, rootValue, context, {email: email, password: passwordParam});
+          expect(result.data.existingUser.id).toBeDefined();
+          expect(result.data.existingUser.email).toEqual(email);
+        });
       });
+
+      describe('incorrect password', () => {
+        beforeEach(async () => {
+          passwordParam = 'some other password';
+        });
+
+        test('returns true, cookie set with auth token', async () => {
+          const result = await graphql(schema, query, rootValue, context, {email: email, password: passwordParam});
+          expect(result.data.existingUser).toBeNull();
+        });
+      });
+
     });
   });
 

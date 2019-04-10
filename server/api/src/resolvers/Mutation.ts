@@ -6,13 +6,14 @@ async function login(parent, args, context, info) {
   if (!user) {
     throw new Error("Cannot login non-existent user");
   }
-
   if (await bcrypt.compare(args.password, user.encryptedPassword)) {
     // matching password!
     // set cookie
 
+    return user;
+  } else {
+    return null;
   }
-  return user;
 }
 
 async function signup(parent, args, context, info) {
