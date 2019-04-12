@@ -21,7 +21,7 @@ const resolvers = {
   Kitchen
 };
 
-const context = (req: ContextParameters) => ({ prisma, req });
+const context = (req: ContextParameters) => ({ prisma, session: req.request.session });
 
 const graphQLServer = new GraphQLServer({
   typeDefs: './src/schema.graphql',
@@ -35,7 +35,7 @@ graphQLServer.express.use(
     name: 'cookbook.sid',
     secret: `some-random-secret-here`,
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false,
     cookie: {
       secure: false, // change to process.env.NODE_ENV === 'production' when HTTPS is set up
       maxAge: ms('1d'),

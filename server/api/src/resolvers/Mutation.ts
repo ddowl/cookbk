@@ -6,10 +6,9 @@ async function login(parent, args, context, info) {
   if (!user) {
     throw new Error("Cannot login non-existent user");
   }
-  if (await bcrypt.compare(args.password, user.encryptedPassword)) {
-    // matching password!
-    // set cookie
 
+  if (await bcrypt.compare(args.password, user.encryptedPassword)) {
+    context.session.userId = user.id;
     return user;
   } else {
     throw new Error("Incorrect password");
@@ -23,14 +22,11 @@ async function signup(parent, args, context, info) {
   }
 
   const encryptedPassword = await bcrypt.hash(args.password, BCRYPT_SALT_ROUNDS);
-
   const newUser = await context.prisma.createUser({
     email: args.email,
     encryptedPassword: encryptedPassword
   });
-
-  // set cookie
-
+  context.session.userId = newUser.id;
   return newUser;
 }
 
@@ -39,6 +35,10 @@ async function deleteUser(parent, args, context, info) {
 }
 
 async function createRecipe(parent, args, context, info) {
+  if (!context.session.userId) {
+    throw new Error("need to log in to create recipes");
+  }
+
   return context.prisma.createRecipe(args);
 }
 
