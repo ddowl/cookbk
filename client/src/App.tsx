@@ -1,11 +1,11 @@
 import React from 'react';
-import Header from "./Header";
+import Header from "./components/Header";
 import { Route, Switch } from "react-router";
-import TitlePage from "./TitlePage";
-import RecipesPage from "./RecipesPage";
-import KitchensPage from "./KitchensPage";
-import MealPage from "./MealPage";
-import UserSettingsPage from "./UserSettingsPage";
+import TitlePage from "./pages/TitlePage";
+import RecipesPage from "./pages/RecipesPage";
+import KitchensPage from "./pages/KitchensPage";
+import MealPage from "./pages/MealPage";
+import UserSettingsPage from "./pages/UserSettingsPage";
 
 const App = () => {
   return (

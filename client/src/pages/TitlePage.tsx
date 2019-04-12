@@ -3,10 +3,10 @@ import './TitlePage.css';
 import React, {useState} from 'react';
 import { ButtonToolbar, Button } from 'react-bootstrap';
 import { Query } from 'react-apollo';
-import { GET_USER_METADATA } from "./queries";
-import SignupModal from "./SignupModal";
-import LoginModal from "./LoginModal";
-import ingredients from './images/ingredients.jpg';
+import { GET_USER_METADATA } from "../graphql/queries";
+import SignupModal from "../components/SignupModal";
+import LoginModal from "../components/LoginModal";
+import ingredients from '../images/ingredients.jpg';
 
 const TitlePage = () => {
   const [showLoginModal, setShowLoginModal] = useState(false);

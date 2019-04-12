@@ -1,7 +1,7 @@
 import React from "react";
 import { ErrorMessage, Field } from "formik";
 import * as Yup from "yup";
-import { SIGNUP_USER } from "./mutations";
+import { SIGNUP_USER } from "../graphql/mutations";
 import UserSessionModal from "./UserSessionModal";
 
 const SignupSchema = Yup.object().shape({

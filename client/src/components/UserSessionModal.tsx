@@ -5,7 +5,7 @@ import { DataProxy } from 'apollo-cache';
 import { Form, Formik } from "formik";
 import * as Yup from "yup";
 import Mutation from "react-apollo/Mutation";
-import { GET_USER_METADATA } from "./queries";
+import { GET_USER_METADATA } from "../graphql/queries";
 import { ApolloError } from "apollo-client/errors/ApolloError";
 
 interface MinimalUserFormInputs {
