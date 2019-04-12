@@ -12,7 +12,10 @@ import { InMemoryCache } from 'apollo-cache-inmemory';
 
 const httpLink = createHttpLink({
   uri: 'http://localhost:4000',
-  credentials: 'include'
+  // TODO: CHANGE THIS IN PRODUCTION TO 'same-origin',
+  // IT'S A HUGE SECURITY VULNERABILITY
+  // https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy
+  credentials: 'include',
 });
 
 const cache = new InMemoryCache();
