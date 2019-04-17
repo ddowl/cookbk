@@ -17,12 +17,15 @@ const testGraphQLServer = new GraphQLServer({ schema, context });
 const testHttpServerPromise = testGraphQLServer.start({port: 1234});
 
 describe('Query', () => {
-  afterAll(async () => {
+  afterEach(async () => {
     // clear DB
     await prisma.deleteManyUsers();
     await prisma.deleteManyKitchens();
     await prisma.deleteManyRecipeSteps();
     await prisma.deleteManyRecipes();
+  });
+
+  afterAll(async () => {
     // close connection
     testHttpServerPromise.then(httpServer => httpServer.close());
   });
@@ -40,14 +43,10 @@ describe('Query', () => {
     });
   });
 
-  describe('users', () => {
-    afterEach(async () => {
-      await prisma.deleteManyUsers();
-    });
-
+  describe('allUsers', () => {
     const query = `
       query {
-        users {
+        allUsers {
           id
         }
       }
@@ -56,7 +55,7 @@ describe('Query', () => {
     describe('no users', () => {
       test('returns no users', async () => {
         const result = await graphql(schema, query, rootValue, context);
-        expect(result.data.users).toEqual([]);
+        expect(result.data.allUsers).toEqual([]);
       });
     });
 
@@ -68,7 +67,7 @@ describe('Query', () => {
 
       test('returns all users', async () => {
         const result = await graphql(schema, query, rootValue, context);
-        const users = result.data.users;
+        const users = result.data.allUsers;
         expect(users.length).toEqual(1);
         expect(users[0].id).toEqual(testUser.id);
       });
@@ -76,12 +75,6 @@ describe('Query', () => {
   });
 
   describe('user(id)', () => {
-    afterEach(async () => {
-      await prisma.deleteManyUsers();
-    });
-
-    const userId = "dummyId";
-
     const query = `
       query user($id: ID!){
         user(id: $id) {
@@ -89,6 +82,7 @@ describe('Query', () => {
         }
       }
     `;
+    const userId = "dummyId";
 
     describe('no users', () => {
       test('returns null', async () => {
@@ -121,14 +115,10 @@ describe('Query', () => {
     });
   });
 
-  describe('recipes', () => {
-    afterEach(async () => {
-      await prisma.deleteManyRecipes();
-    });
-
+  describe('allRecipes', () => {
     const query = `
       query {
-        recipes {
+        allRecipes {
           id
         }
       }
@@ -137,19 +127,30 @@ describe('Query', () => {
     describe('no recipes', () => {
       test('returns no recipes', async () => {
         const result = await graphql(schema, query, rootValue, context);
-        expect(result.data.recipes).toEqual([]);
+        expect(result.data.allRecipes).toEqual([]);
       });
     });
 
     describe('some recipes', () => {
       let testRecipe;
       beforeEach(async () => {
-        testRecipe = await prisma.createRecipe({name: "", description: "", maxServingWaitTime: 0});
+        const testUser = await prisma.createUser({email: "", encryptedPassword: ""});
+
+        testRecipe = await prisma.createRecipe({
+          name: "",
+          description: "",
+          maxServingWaitTime: 0,
+          author: {
+            connect: {
+              id: testUser.id
+            }
+          }
+        });
       });
 
       test('returns all recipes', async () => {
         const result = await graphql(schema, query, rootValue, context);
-        const recipes = result.data.recipes;
+        const recipes = result.data.allRecipes;
         expect(recipes.length).toEqual(1);
         expect(recipes[0].id).toEqual(testRecipe.id);
       });
@@ -157,12 +158,6 @@ describe('Query', () => {
   });
 
   describe('recipe(id)', () => {
-    afterEach(async () => {
-      await prisma.deleteManyRecipes();
-    });
-
-    const recipeId = "dummyId";
-
     const query = `
       query recipe($id: ID!){
         recipe(id: $id) {
@@ -170,6 +165,7 @@ describe('Query', () => {
         }
       }
     `;
+    const recipeId = "dummyId";
 
     describe('no recipes', () => {
       test('returns null', async () => {
@@ -181,9 +177,37 @@ describe('Query', () => {
     describe('some recipes', () => {
       let testRecipe;
       beforeEach(async () => {
-        testRecipe = await prisma.createRecipe({name: "0", description: "0", maxServingWaitTime: 0});
-        await prisma.createRecipe({name: "1", description: "1", maxServingWaitTime: 1});
-        await prisma.createRecipe({name: "2", description: "2", maxServingWaitTime: 2});
+        const testUser = await prisma.createUser({email: "", encryptedPassword: ""});
+        testRecipe = await prisma.createRecipe({
+          name: "0",
+          description: "0",
+          maxServingWaitTime: 0,
+          author: {
+            connect: {
+              id: testUser.id
+            }
+          }
+        });
+        await prisma.createRecipe({
+          name: "1",
+          description: "1",
+          maxServingWaitTime: 1,
+          author: {
+            connect: {
+              id: testUser.id
+            }
+          }
+        });
+        await prisma.createRecipe({
+          name: "2",
+          description: "2",
+          maxServingWaitTime: 0,
+          author: {
+            connect: {
+              id: testUser.id
+            }
+          }
+        });
       });
 
       describe('query for nonexistent recipe', () => {
@@ -193,8 +217,8 @@ describe('Query', () => {
         });
       });
 
-      describe('query for existing user', () => {
-        test('returns that user', async () => {
+      describe('query for existing recipe', () => {
+        test('returns that recipe', async () => {
           const result = await graphql(schema, query, rootValue, context, {id: testRecipe.id});
           expect(result.data.recipe.id).toEqual(testRecipe.id);
         });

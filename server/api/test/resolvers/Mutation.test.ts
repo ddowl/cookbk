@@ -20,7 +20,7 @@ const testGraphQLServer = new GraphQLServer({ schema, context });
 const testHttpServerPromise = testGraphQLServer.start({ port });
 
 describe('Mutation', () => {
-  afterAll(async () => {
+  afterEach(async () => {
     // clear DB
     await prisma.deleteManyUsers();
     await prisma.deleteManyKitchens();
@@ -28,6 +28,9 @@ describe('Mutation', () => {
     // https://github.com/prisma/prisma/issues/1936
     await prisma.deleteManyRecipeSteps();
     await prisma.deleteManyRecipes();
+  });
+
+  afterAll(async () => {
     // close connection
     testHttpServerPromise.then(httpServer => httpServer.close());
   });
@@ -35,10 +38,6 @@ describe('Mutation', () => {
   // TODO: not sure how to test setting session/auth cookie
   // Is a headless browser integration test the only way to access cookies?
   describe('login', () => {
-    afterEach(async () => {
-      await prisma.deleteManyUsers();
-    });
-
     const query = `
       mutation login($email: String!, $password: String!) {
         existingUser: login(email: $email, password: $password) {
@@ -105,10 +104,6 @@ describe('Mutation', () => {
   });
 
   describe('signup', () => {
-    afterEach(async () => {
-      await prisma.deleteManyUsers();
-    });
-
     const query = `
       mutation signup($email: String!, $password: String!) {
         newUser: signup(email: $email, password: $password) {
@@ -154,10 +149,6 @@ describe('Mutation', () => {
   // Users
 
   describe('deleteUser', () => {
-    afterEach(async () => {
-      await prisma.deleteManyUsers();
-    });
-
     const query =`
       mutation deleteUser($id: ID!){
         deletedUser: deleteUser(id: $id)
@@ -192,10 +183,6 @@ describe('Mutation', () => {
       // Cascading deletes for recipes and their steps makes sense, but recipes _might_ be able
       // to exist independently of users if the dependency on kitchenware isn't too strict.
     //   describe('with populated recipes', () => {
-    //     afterEach(async () => {
-    //       await prisma.deleteManyRecipeSteps();
-    //       await prisma.deleteManyRecipes();
-    //     });
     //
     //     beforeEach(async () => {
     //       await prisma.createRecipe({
@@ -236,67 +223,85 @@ describe('Mutation', () => {
 
   // Recipes
 
-  describe('createRecipe', () => {
-    afterEach(async () => {
-      await prisma.deleteManyRecipes();
-    });
-
-    const query = `
-      mutation createRecipe($name: String!, $description: String!, $maxServingWaitTime: Int) {
-        newRecipe: createRecipe(name: $name, description: $description, maxServingWaitTime: $maxServingWaitTime) {
-          name
-          description
-          maxServingWaitTime
-        }
-      }
-    `;
-
-    const recipeData = {name: "Toast", description: "A simple breakfast", maxServingWaitTime: 5};
-
-    describe('no recipes', () => {
-      describe('create a recipe with distinct fields', () => {
-        test('creates a new recipe', async () => {
-          const result = await graphql(schema, query, rootValue, context, recipeData);
-          expect(result.data.newRecipe).toEqual(recipeData);
-          expect((await prisma.recipes()).length).toEqual(1);
-        });
-      });
-
-      describe('omitting maxServingWaitTime', () => {
-        const recipeData = {name: "Toast", description: "A simple breakfast"};
-
-        test('creates the new recipe without it', async () => {
-          const result = await graphql(schema, query, rootValue, context, recipeData);
-          expect(result.data.newRecipe.name).toEqual(recipeData.name);
-          expect(result.data.newRecipe.description).toEqual(recipeData.description);
-          expect(result.data.newRecipe.maxServingWaitTime).toEqual(null);
-          expect((await prisma.recipes()).length).toEqual(1);
-        });
-      });
-    });
-
-    describe('one recipe', () => {
-      let testRecipe: Recipe;
-      beforeEach(async () => {
-        testRecipe = await prisma.createRecipe({name: "1", description: "1", maxServingWaitTime: 1});
-      });
-
-      describe('create a recipe with distinct fields', () => {
-        test('creates a new recipe', async () => {
-          const result = await graphql(schema, query, rootValue, context, recipeData);
-          expect(result.data.newRecipe).toEqual(recipeData);
-          expect((await prisma.recipes()).length).toEqual(2);
-        });
-      });
-    });
-  });
+  // describe('createRecipe', () => {
+  //   const query = `
+  //     mutation createRecipe($name: String!, $description: String!, $maxServingWaitTime: Int) {
+  //       newRecipe: createRecipe(name: $name, description: $description, maxServingWaitTime: $maxServingWaitTime) {
+  //         name
+  //         description
+  //         maxServingWaitTime
+  //       }
+  //     }
+  //   `;
+  //
+  //   const recipeData = {name: "Toast", description: "A simple breakfast", maxServingWaitTime: 5};
+  //
+  //   describe('user not logged in', () => {
+  //     test('throws error', async () => {
+  //       const errorMessage = "need to log in to create recipes";
+  //
+  //       const result = await graphql(schema, query, rootValue, context, recipeData);
+  //       console.log(result);
+  //       expect(result.data.newRecipe).toBeNull();
+  //       expect(result.errors[0].message).toEqual(errorMessage);
+  //     });
+  //   });
+  //
+  //   describe('user logged in', () => {
+  //     let testUser;
+  //     beforeEach(async () => {
+  //       testUser = await prisma.createUser({email: "", encryptedPassword: ""});
+  //     });
+  //
+  //     describe('no recipes', () => {
+  //       describe('create a recipe with distinct fields', () => {
+  //         test('creates a new recipe', async () => {
+  //           const result = await graphql(schema, query, rootValue, context, recipeData);
+  //           expect(result.data.newRecipe).toEqual(recipeData);
+  //           expect((await prisma.recipes()).length).toEqual(1);
+  //         });
+  //       });
+  //
+  //       describe('omitting maxServingWaitTime', () => {
+  //         const recipeData = {name: "Toast", description: "A simple breakfast"};
+  //
+  //         test('creates the new recipe without it', async () => {
+  //           const result = await graphql(schema, query, rootValue, context, recipeData);
+  //           expect(result.data.newRecipe.name).toEqual(recipeData.name);
+  //           expect(result.data.newRecipe.description).toEqual(recipeData.description);
+  //           expect(result.data.newRecipe.maxServingWaitTime).toEqual(null);
+  //           expect((await prisma.recipes()).length).toEqual(1);
+  //         });
+  //       });
+  //     });
+  //
+  //     describe('one recipe', () => {
+  //       let testRecipe: Recipe;
+  //       beforeEach(async () => {
+  //         testRecipe = await prisma.createRecipe({
+  //           name: "1",
+  //           description: "1",
+  //           maxServingWaitTime: 1,
+  //           author: {
+  //             connect: {
+  //               id: testUser.id
+  //             }
+  //           }
+  //         });
+  //       });
+  //
+  //       describe('create a recipe with distinct fields', () => {
+  //         test('creates a new recipe', async () => {
+  //           const result = await graphql(schema, query, rootValue, context, recipeData);
+  //           expect(result.data.newRecipe).toEqual(recipeData);
+  //           expect((await prisma.recipes()).length).toEqual(2);
+  //         });
+  //       });
+  //     });
+  //   });
+  // });
 
   describe('deleteRecipe', () => {
-    afterEach(async () => {
-      await prisma.deleteManyRecipes();
-      await prisma.deleteManyRecipeSteps();
-    });
-
     const query =`
       mutation deleteRecipe($id: ID!){
         deletedRecipe: deleteRecipe(id: $id)
@@ -312,14 +317,17 @@ describe('Mutation', () => {
         const errorMessage = 'No Node for the model Recipe with value nonexistent for id found.';
 
         const result = await graphql(schema, query, rootValue, context, {id});
-        expect(result.data.deletedRecipe).toEqual(null);
+        expect(result.data.deletedRecipe).toBeNull();
         expect(result.errors[0].message).toEqual(errorMessage);
         expect((await prisma.recipes()).length).toEqual(0);
       });
     });
 
+
     describe('deleting existing recipe with steps', () => {
+
       beforeEach(async () => {
+        const testUser = await prisma.createUser({email: "", encryptedPassword: ""});
         testRecipe = await prisma.createRecipe({
           name: "",
           description: "",
@@ -345,6 +353,11 @@ describe('Mutation', () => {
                 isAttended: true,
               },
             ]
+          },
+          author: {
+            connect: {
+              id: testUser.id
+            }
           }
         });
       });
@@ -361,11 +374,6 @@ describe('Mutation', () => {
   // RecipeStep
 
   describe('addStepToRecipe', () => {
-    afterEach(async () => {
-      await prisma.deleteManyRecipeSteps();
-      await prisma.deleteManyRecipes();
-    });
-
     const query =`
       mutation addStepToRecipe($description: String!, $duration: Int!, $isAttended: Boolean!, $recipeId: ID!){
         newRecipeStep: addStepToRecipe(description: $description, durationInMinutes: $duration, isAttended: $isAttended, recipeId: $recipeId) {
@@ -391,7 +399,17 @@ describe('Mutation', () => {
     describe('existing recipe with no steps', () => {
       let testRecipe: Recipe;
       beforeEach(async () => {
-        testRecipe = await prisma.createRecipe({name: "1", description: "1", maxServingWaitTime: 1});
+        const testUser = await prisma.createUser({email: "", encryptedPassword: ""});
+        testRecipe = await prisma.createRecipe({
+          name: "1",
+          description: "1",
+          maxServingWaitTime: 1,
+          author: {
+            connect: {
+              id: testUser.id
+            }
+          }
+        });
         expect((await prisma.recipe({id: testRecipe.id}).steps())).toEqual([]);
       });
 
@@ -415,6 +433,7 @@ describe('Mutation', () => {
     describe('existing recipe with several steps', () => {
       let testRecipe: Recipe;
       beforeEach(async () => {
+        const testUser = await prisma.createUser({email: "", encryptedPassword: ""});
         testRecipe = await prisma.createRecipe({
           name: "1",
           description: "1",
@@ -440,6 +459,11 @@ describe('Mutation', () => {
                 isAttended: true,
               },
             ]
+          },
+          author: {
+            connect: {
+              id: testUser.id
+            }
           }
         });
       });
@@ -463,11 +487,6 @@ describe('Mutation', () => {
   });
 
   describe('moveStep', () => {
-    afterEach(async () => {
-      await prisma.deleteManyRecipeSteps();
-      await prisma.deleteManyRecipes();
-    });
-
     const query =`
       mutation moveStep($stepId: ID!, $recipeId: ID!, $destIdx: Int!){
         movedStepId: moveStep(stepId: $stepId, recipeId: $recipeId, destIdx: $destIdx)
@@ -491,7 +510,17 @@ describe('Mutation', () => {
 
     describe('recipe with one step exists', () => {
       beforeEach(async () => {
-        testRecipe = await prisma.createRecipe({name: "1", description: "1", maxServingWaitTime: 1});
+        const testUser = await prisma.createUser({email: "", encryptedPassword: ""});
+        testRecipe = await prisma.createRecipe({
+          name: "1",
+          description: "1",
+          maxServingWaitTime: 1,
+          author: {
+            connect: {
+              id: testUser.id
+            }
+          }
+        });
         testStep = await prisma.createRecipeStep({
           idx: 0,
           description: "",
@@ -544,6 +573,7 @@ describe('Mutation', () => {
 
     describe('recipe with several steps exists', () => {
       beforeEach(async () => {
+        const testUser = await prisma.createUser({email: "", encryptedPassword: ""});
         testRecipe = await prisma.createRecipe({
           name: "1", description: "1", maxServingWaitTime: 1,
           steps: {
@@ -567,6 +597,11 @@ describe('Mutation', () => {
                 isAttended: true,
               },
             ]
+          },
+          author: {
+            connect: {
+              id: testUser.id
+            }
           }
         });
         testStep = await prisma.createRecipeStep({
@@ -641,11 +676,6 @@ describe('Mutation', () => {
   });
 
   describe('deleteStep', () => {
-    afterEach(async () => {
-      await prisma.deleteManyRecipeSteps();
-      await prisma.deleteManyRecipes();
-    });
-
     const query =`
       mutation deleteStep($stepId: ID!, $recipeId: ID!){
         deletedRecipeStepId: deleteStep(stepId: $stepId, recipeId: $recipeId)
@@ -664,7 +694,17 @@ describe('Mutation', () => {
 
     describe('recipe with one step', () => {
       beforeEach(async () => {
-        testRecipe = await prisma.createRecipe({name: "", description: "", maxServingWaitTime: 0});
+        const testUser = await prisma.createUser({email: "", encryptedPassword: ""});
+        testRecipe = await prisma.createRecipe({
+          name: "",
+          description: "",
+          maxServingWaitTime: 0,
+          author: {
+            connect: {
+              id: testUser.id
+            }
+          }
+        });
         testStep = await prisma.createRecipeStep({idx: 0, description: "", duration: 0, isAttended: true, recipe: {connect: {id: testRecipe.id}}});
       });
 
@@ -678,8 +718,16 @@ describe('Mutation', () => {
 
     describe('recipe with several steps', () => {
       beforeEach(async () => {
+        const testUser = await prisma.createUser({email: "", encryptedPassword: ""});
         testRecipe = await prisma.createRecipe({
-          name: "1", description: "1", maxServingWaitTime: 1,
+          name: "1",
+          description: "1",
+          maxServingWaitTime: 1,
+          author: {
+            connect: {
+              id: testUser.id
+            }
+          },
           steps: {
             create: [
               {
