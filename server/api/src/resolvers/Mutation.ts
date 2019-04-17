@@ -39,7 +39,16 @@ async function createRecipe(parent, args, context, info) {
     throw new Error("need to log in to create recipes");
   }
 
-  return context.prisma.createRecipe(args);
+  return context.prisma.createRecipe({
+    name: args.name,
+    description: args.description,
+    maxServingWaitTime: args.maxServingWaitTime,
+    author: {
+      connect: {
+        id: args.authorId
+      }
+    }
+  });
 }
 
 async function deleteRecipe(parent, args, context, info) {

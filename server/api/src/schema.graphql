@@ -10,7 +10,7 @@ type Mutation {
     login(email: String!, password: String!): User
     signup(email: String!, password: String!): User
     deleteUser(id: ID!): ID
-    createRecipe(name: String!, description: String!, maxServingWaitTime: Int): Recipe!
+    createRecipe(name: String!, description: String!, maxServingWaitTime: Int, authorId: ID!): Recipe
     deleteRecipe(id: ID!): ID
     addStepToRecipe(description: String!, durationInMinutes: Int!, isAttended: Boolean!, recipeId: ID!): RecipeStep
     moveStep(stepId: ID!, recipeId: ID!, destIdx: Int!): ID
@@ -23,6 +23,7 @@ type Recipe {
     description: String!
     maxServingWaitTime: Int,
     steps: [RecipeStep!]!
+    user: User!
 }
 
 type RecipeStep {
