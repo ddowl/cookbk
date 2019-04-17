@@ -35,7 +35,14 @@ const UserSessionModal = (props: UserSessionModalProps) => {
     const userAlias = props.userMutation.definitions[0].selectionSet.selections[0].alias.value;
     cache.writeQuery({
       query: GET_USER_METADATA,
-      data: { user: { __typename: "User", isLoggedIn: true, email: mutationResult.data![userAlias].email } },
+      data: {
+        user: {
+          __typename: "User",
+          isLoggedIn: true,
+          id: mutationResult.data![userAlias].id,
+          email: mutationResult.data![userAlias].email
+        }
+      },
     });
   };
 

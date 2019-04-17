@@ -28,7 +28,8 @@ const data = {
   user: {
     __typename: 'User',
     isLoggedIn: false,
-    email: null
+    id: null,
+    email: null,
   }
 };
 cache.writeData({ data });
