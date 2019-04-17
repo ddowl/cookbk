@@ -13,17 +13,14 @@ const TitlePage = () => {
   const [showSignupModal, setShowSignupModal] = useState(false);
 
   const handleLogin = () => {
-    console.log("login!");
     setShowLoginModal(true);
   };
 
   const handleSignup = () => {
-    console.log("signup!");
     setShowSignupModal(true);
   };
 
   const handleClose = () => {
-    console.log("closing modal!");
     setShowLoginModal(false);
     setShowSignupModal(false)
   };
@@ -46,10 +43,10 @@ const TitlePage = () => {
       </header>
       <Query query={GET_USER_METADATA}>
         {({data: { user } }) => {
-          console.log(user);
           return (
             <div>
               <ul>isLoggedIn: {user.isLoggedIn.toString()}</ul>
+              <ul>id: {user.id}</ul>
               <ul>email: {user.email}</ul>
             </div>
           );
