@@ -1,30 +1,38 @@
 type Recipe {
-    id: ID! @unique
+    id: ID! @id
     name: String!
     description: String!
     maxServingWaitTime: Int,
     steps: [RecipeStep!]! @relation(name: "StepsInRecipe", onDelete: CASCADE)
-    author: User! @relation(name: "RecipeCreatedBy")
+    author: User! @relation(link: INLINE, name: "RecipeCreatedBy")
+    createdAt: DateTime! @createdAt
+    updatedAt: DateTime! @updatedAt
 }
 
 type RecipeStep {
-    id: ID! @unique
+    id: ID! @id
     idx: Int!
     description: String!
     duration: Int! # in minutes
     isAttended: Boolean!
-    recipe: Recipe! @relation(name: "StepsInRecipe")
+    recipe: Recipe! @relation(link: INLINE, name: "StepsInRecipe")
+    createdAt: DateTime! @createdAt
+    updatedAt: DateTime! @updatedAt
 }
 
 type Kitchen {
-    id: ID! @unique
-    name: String!,
+    id: ID! @id
+    name: String!
+    createdAt: DateTime! @createdAt
+    updatedAt: DateTime! @updatedAt
 }
 
 type User {
-    id: ID! @unique
+    id: ID! @id
     email: String! @unique
     encryptedPassword: String!
     recipes: [Recipe!]! @relation(name: "RecipeCreatedBy", onDelete: CASCADE)
     kitchens: [Kitchen!]!
+    createdAt: DateTime! @createdAt
+    updatedAt: DateTime! @updatedAt
 }
