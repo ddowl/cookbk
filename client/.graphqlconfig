@@ -1,0 +1,13 @@
+{
+  "schemaPath": "../server/api/src/schema.graphql",
+  "extensions": {
+    "endpoints": {
+      "Default (http://localhost:4000/)": {
+        "url": "http://localhost:4000/",
+        "headers": {
+          "user-agent": "JS GraphQL"
+        }
+      }
+    }
+  }
+}
