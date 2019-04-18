@@ -1,5 +1,6 @@
 type Query {
     info: String!
+    me: User  # clients call this endpoint on each page refresh to gather
     user(id: ID!): User
     recipe(id: ID!): Recipe
     allUsers: [User!]!

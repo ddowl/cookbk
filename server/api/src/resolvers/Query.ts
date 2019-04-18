@@ -2,6 +2,16 @@ function info(parent, args, context, info) {
   return "This is a test to make sure the endpoint is working!";
 }
 
+// return userId from session if it exists,
+// otherwise, return null
+async function me(parent, args, context, info) {
+  if (context.session.userId) {
+    return context.prisma.user({id: context.session.userId});
+  } else {
+    return null;
+  }
+}
+
 async function allUsers(parent, args, context, info) {
   return await context.prisma.users();
 }
@@ -20,6 +30,7 @@ async function recipe(parent, args, context, info) {
 
 export {
   info,
+  me,
   allUsers,
   user,
   allRecipes,
