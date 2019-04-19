@@ -97,6 +97,4 @@ const UserSessionModal = (props: UserSessionModalProps) => {
   );
 };
 
-
-
 export default UserSessionModal;

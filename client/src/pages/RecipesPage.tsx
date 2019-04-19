@@ -8,6 +8,8 @@ import { DataProxy } from 'apollo-cache';
 import { ApolloError } from "apollo-client/errors/ApolloError";
 import Query from "react-apollo/Query";
 import { GET_USER_METADATA } from "../graphql/queries";
+import { useState } from "react";
+import CreateRecipeModal from "../components/CreateRecipeModal";
 
 
 const CREATE_DUMMY_RECIPE = gql`
@@ -34,6 +36,8 @@ const GET_USER_RECIPES = gql`
 `;
 
 const RecipesPage = () => {
+  const [showCreateRecipeModal, setShowCreateRecipeModal] = useState(false);
+
   const handleUpdate = (cache: DataProxy, mutationResult: FetchResult) => {
     console.log("got new recipe result!");
     console.log(mutationResult);
@@ -97,6 +101,18 @@ const RecipesPage = () => {
                   )
                 }}
               </Mutation>
+              <Button
+                className="create-recipe-button"
+                variant="primary"
+                onClick={() => setShowCreateRecipeModal(true)}
+              >
+                Create Recipe
+              </Button>
+              <CreateRecipeModal
+                show={showCreateRecipeModal}
+                title="Create Recipe"
+                handleClose={() => setShowCreateRecipeModal(false)}
+              />
             </>
           );
         }
