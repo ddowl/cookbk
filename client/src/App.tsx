@@ -14,6 +14,11 @@ const GET_SESSION = gql`
     me {
       id
       email
+      recipes {
+        id
+        name
+        description
+      }
     }
   }
 `;
@@ -30,7 +35,8 @@ const App = () => {
                   __typename: "User",
                   isLoggedIn: true,
                   id: data.me.id,
-                  email: data.me.email
+                  email: data.me.email,
+                  recipes: data.me.recipes,
                 }
               },
             });

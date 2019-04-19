@@ -30,6 +30,7 @@ const data = {
     isLoggedIn: false,
     id: null,
     email: null,
+    recipes: []
   }
 };
 cache.writeData({ data });
