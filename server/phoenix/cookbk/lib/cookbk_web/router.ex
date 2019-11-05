@@ -17,7 +17,12 @@ defmodule CookbkWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :index
-    resources "/users", UserController
+
+    resources "/users", UserController do
+      pipe_through [:authenticate_user]
+
+      resources "/recipes", RecipeController
+    end
 
     resources "/sessions", SessionController,
       only: [:new, :create, :delete],

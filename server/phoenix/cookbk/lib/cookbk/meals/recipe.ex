@@ -6,7 +6,6 @@ defmodule Cookbk.Meals.Recipe do
 
   schema "recipes" do
     field :description, :string
-    field :max_serving_wait_time, :integer
     field :name, :string
     belongs_to :user, User
     has_many :recipe_steps, RecipeStep

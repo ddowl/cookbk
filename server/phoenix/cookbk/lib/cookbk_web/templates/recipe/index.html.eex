@@ -1,0 +1,30 @@
+<h1>Listing Recipes</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Description</th>
+      <th>Max Serving Wait Time</th>
+
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+<%= for recipe <- @recipes do %>
+    <tr>
+      <td><%= recipe.name %></td>
+      <td><%= recipe.description %></td>
+      <td><%= recipe.max_serving_wait_time %></td>
+
+      <td>
+        <span><%= link "Show", to: Routes.user_recipe_path(@conn, :show, @current_user, recipe) %></span>
+        <span><%= link "Edit", to: Routes.user_recipe_path(@conn, :edit, @current_user, recipe) %></span>
+        <span><%= link "Delete", to: Routes.user_recipe_path(@conn, :delete, @current_user, recipe), method: :delete, data: [confirm: "Are you sure?"] %></span>
+      </td>
+    </tr>
+<% end %>
+  </tbody>
+</table>
+
+<span><%= link "New Recipe", to: Routes.user_recipe_path(@conn, :new, @current_user) %></span>
