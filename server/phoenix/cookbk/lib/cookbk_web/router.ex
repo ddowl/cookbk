@@ -29,6 +29,7 @@ defmodule CookbkWeb.Router do
   #   pipe_through :api
   # end
 
+  # TODO: baaaaad code duplication
   defp authenticate_user(conn, _) do
     case get_session(conn, :user_id) do
       nil ->

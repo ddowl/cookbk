@@ -14,6 +14,14 @@
           <ul>
             <li><%= link "Home", to: Routes.page_path(@conn, :index) %></li>
           </ul>
+          <ul>
+            <li>Session Status:
+              <%= case Plug.Conn.get_session(@conn, :user_id) do
+                nil -> "Not logged in"
+                user_id -> "Logged in as user ##{user_id}"
+              end %>
+            </li>
+          </ul>
         </nav>
         <a href="http://phoenixframework.org/" class="phx-logo">
           <img src="<%= Routes.static_path(@conn, "/images/phoenix.png") %>" alt="Phoenix Framework Logo"/>

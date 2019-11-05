@@ -4,6 +4,8 @@ defmodule CookbkWeb.UserController do
   alias Cookbk.Accounts
   alias Cookbk.Accounts.User
 
+  plug :authenticate_user when action not in [:new, :create, :index]
+
   def index(conn, _params) do
     users = Accounts.list_users()
     render(conn, "index.html", users: users)
@@ -58,5 +60,20 @@ defmodule CookbkWeb.UserController do
     conn
     |> put_flash(:info, "User deleted successfully.")
     |> redirect(to: Routes.user_path(conn, :index))
+  end
+
+  # TODO: baaaaad duplicate code
+  # How can I share with router.ex?
+  defp authenticate_user(conn, _) do
+    case get_session(conn, :user_id) do
+      nil ->
+        conn
+        |> Phoenix.Controller.put_flash(:error, "Login required")
+        |> Phoenix.Controller.redirect(to: "/")
+        |> halt()
+
+      user_id ->
+        assign(conn, :current_user, Cookbk.Accounts.get_user!(user_id))
+    end
   end
 end

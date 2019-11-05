@@ -1,6 +1,5 @@
 defmodule CookbkWeb.SessionController do
   use CookbkWeb, :controller
-
   alias Cookbk.Accounts
 
   def new(conn, _) do
