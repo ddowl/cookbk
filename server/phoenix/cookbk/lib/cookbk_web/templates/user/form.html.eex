@@ -6,7 +6,7 @@
   <% end %>
 
   <%= label f, :username %>
-  <%= email_input f, :username %>
+  <%= text_input f, :username %>
   <%= error_tag f, :username %>
 
   <div class="form-group">
