@@ -7,6 +7,7 @@ defmodule Cookbk.Meals do
   alias Cookbk.Repo
 
   alias Cookbk.Meals.Recipe
+  alias Cookbk.Accounts.User
 
   @doc """
   Returns the list of recipes.
@@ -35,7 +36,11 @@ defmodule Cookbk.Meals do
       ** (Ecto.NoResultsError)
 
   """
-  def get_recipe!(id), do: Repo.get!(Recipe, id)
+  def get_recipe!(id) do
+    Recipe
+    |> Repo.get!(id)
+    |> Repo.preload(:user)
+  end
 
   @doc """
   Creates a recipe.
@@ -49,9 +54,10 @@ defmodule Cookbk.Meals do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_recipe(attrs \\ %{}) do
+  def create_recipe(user, attrs \\ %{}) do
     %Recipe{}
     |> Recipe.changeset(attrs)
+    |> Ecto.Changeset.put_assoc(:user, user)
     |> Repo.insert()
   end
 
@@ -67,9 +73,10 @@ defmodule Cookbk.Meals do
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_recipe(%Recipe{} = recipe, attrs) do
+  def update_recipe(user, %Recipe{} = recipe, attrs) do
     recipe
     |> Recipe.changeset(attrs)
+    |> Ecto.Changeset.put_assoc(:user, user)
     |> Repo.update()
   end
 

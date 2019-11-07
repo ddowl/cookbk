@@ -5,7 +5,6 @@
     <tr>
       <th>Name</th>
       <th>Description</th>
-      <th>Max Serving Wait Time</th>
 
       <th></th>
     </tr>
@@ -15,7 +14,6 @@
     <tr>
       <td><%= recipe.name %></td>
       <td><%= recipe.description %></td>
-      <td><%= recipe.max_serving_wait_time %></td>
 
       <td>
         <span><%= link "Show", to: Routes.user_recipe_path(@conn, :show, @current_user, recipe) %></span>

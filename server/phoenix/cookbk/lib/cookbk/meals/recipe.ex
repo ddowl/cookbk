@@ -16,7 +16,7 @@ defmodule Cookbk.Meals.Recipe do
   @doc false
   def changeset(recipe, attrs) do
     recipe
-    |> cast(attrs, [:name, :description, :max_serving_wait_time])
-    |> validate_required([:name, :description, :max_serving_wait_time])
+    |> cast(attrs, [:name, :description])
+    |> validate_required([:name, :description])
   end
 end

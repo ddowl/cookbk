@@ -6,13 +6,12 @@ defmodule Cookbk.MealsTest do
   describe "recipes" do
     alias Cookbk.Meals.Recipe
 
-    @valid_attrs %{description: "some description", max_serving_wait_time: 42, name: "some name"}
+    @valid_attrs %{description: "some description", name: "some name"}
     @update_attrs %{
       description: "some updated description",
-      max_serving_wait_time: 43,
       name: "some updated name"
     }
-    @invalid_attrs %{description: nil, max_serving_wait_time: nil, name: nil}
+    @invalid_attrs %{description: nil, name: nil}
 
     def recipe_fixture(attrs \\ %{}) do
       {:ok, recipe} =
@@ -36,7 +35,6 @@ defmodule Cookbk.MealsTest do
     test "create_recipe/1 with valid data creates a recipe" do
       assert {:ok, %Recipe{} = recipe} = Meals.create_recipe(@valid_attrs)
       assert recipe.description == "some description"
-      assert recipe.max_serving_wait_time == 42
       assert recipe.name == "some name"
     end
 
@@ -48,7 +46,6 @@ defmodule Cookbk.MealsTest do
       recipe = recipe_fixture()
       assert {:ok, %Recipe{} = recipe} = Meals.update_recipe(recipe, @update_attrs)
       assert recipe.description == "some updated description"
-      assert recipe.max_serving_wait_time == 43
       assert recipe.name == "some updated name"
     end
 

@@ -16,11 +16,13 @@ defmodule CookbkWeb.RecipeController do
   end
 
   def create(conn, %{"recipe" => recipe_params}) do
-    case Meals.create_recipe(recipe_params) do
+    current_user = conn.assigns.current_user
+
+    case Meals.create_recipe(current_user, recipe_params) do
       {:ok, recipe} ->
         conn
         |> put_flash(:info, "Recipe created successfully.")
-        |> redirect(to: Routes.user_recipe_path(conn, :show, recipe.user, recipe))
+        |> redirect(to: Routes.user_recipe_path(conn, :show, current_user, recipe))
 
       {:error, %Ecto.Changeset{} = changeset} ->
         render(conn, "new.html", changeset: changeset)
@@ -40,12 +42,13 @@ defmodule CookbkWeb.RecipeController do
 
   def update(conn, %{"id" => id, "recipe" => recipe_params}) do
     recipe = Meals.get_recipe!(id)
+    current_user = conn.assigns.current_user
 
-    case Meals.update_recipe(recipe, recipe_params) do
+    case Meals.update_recipe(current_user, recipe, recipe_params) do
       {:ok, recipe} ->
         conn
         |> put_flash(:info, "Recipe updated successfully.")
-        |> redirect(to: Routes.user_recipe_path(conn, :show, recipe.user, recipe))
+        |> redirect(to: Routes.user_recipe_path(conn, :show, current_user, recipe))
 
       {:error, %Ecto.Changeset{} = changeset} ->
         render(conn, "edit.html", recipe: recipe, changeset: changeset)
@@ -57,22 +60,7 @@ defmodule CookbkWeb.RecipeController do
     {:ok, _recipe} = Meals.delete_recipe(recipe)
 
     conn
-    |> put_flash(:info, "User deleted successfully.")
-    |> redirect(to: Routes.user_path(conn, :index))
-  end
-
-  # TODO: baaaaad duplicate code
-  # How can I share with router.ex?
-  defp authenticate_user(conn, _) do
-    case get_session(conn, :user_id) do
-      nil ->
-        conn
-        |> Phoenix.Controller.put_flash(:error, "Login required")
-        |> Phoenix.Controller.redirect(to: "/")
-        |> halt()
-
-      user_id ->
-        assign(conn, :current_user, Cookbk.Accounts.get_user!(user_id))
-    end
+    |> put_flash(:info, "Recipe deleted successfully.")
+    |> redirect(to: Routes.user_recipe_path(conn, :index, conn.assigns.current_user))
   end
 end

@@ -13,10 +13,6 @@
   <%= textarea f, :description %>
   <%= error_tag f, :description %>
 
-  <%= label f, :max_serving_wait_time %>
-  <%= number_input f, :max_serving_wait_time %>
-  <%= error_tag f, :max_serving_wait_time %>
-
   <div>
     <%= submit "Save" %>
   </div>

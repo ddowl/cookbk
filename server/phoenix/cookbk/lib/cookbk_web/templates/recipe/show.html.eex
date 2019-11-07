@@ -10,11 +10,6 @@
     <strong>Description:</strong>
     <%= @recipe.description %>
   </li>
-  
-  <li>
-    <strong>Max Serving Wait Time:</strong>
-    <%= @recipe.max_serving_wait_time %>
-  </li>
 </ul>
 
 <span><%= link "Edit", to: Routes.user_recipe_path(@conn, :edit, @current_user, @recipe) %></span>
