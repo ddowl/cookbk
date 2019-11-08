@@ -13,6 +13,24 @@
   <%= textarea f, :description %>
   <%= error_tag f, :description %>
 
+  <%= inputs_for f, :recipe_steps, fn s -> %>
+    <span>Step <%= s.index + 1 %></span>
+
+    <div class="form-group">
+      <%= label s, :description %>
+      <%= text_input s, :description %>
+      <%= error_tag s, :description %>
+
+      <%= label s, :duration, "Duration (in minutes)" %>
+      <%= number_input s, :duration %>
+      <%= error_tag s, :duration %>
+
+      <%= label s, :is_attended, "Is Attended?" %>
+      <%= checkbox s, :is_attended %>
+      <%= error_tag s, :is_attended %>
+    </div>
+  <% end %>
+
   <div>
     <%= submit "Save" %>
   </div>

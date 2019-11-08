@@ -7,7 +7,6 @@ defmodule Cookbk.Meals do
   alias Cookbk.Repo
 
   alias Cookbk.Meals.Recipe
-  alias Cookbk.Accounts.User
 
   @doc """
   Returns the list of recipes.
@@ -39,7 +38,7 @@ defmodule Cookbk.Meals do
   def get_recipe!(id) do
     Recipe
     |> Repo.get!(id)
-    |> Repo.preload(:user)
+    |> Repo.preload([:user, :recipe_steps])
   end
 
   @doc """

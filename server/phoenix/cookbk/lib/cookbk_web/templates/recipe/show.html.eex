@@ -10,6 +10,10 @@
     <strong>Description:</strong>
     <%= @recipe.description %>
   </li>
+
+  <%= for step <- @recipe.recipe_steps do %>
+    <span>A step!</span>
+  <% end %>
 </ul>
 
 <span><%= link "Edit", to: Routes.user_recipe_path(@conn, :edit, @current_user, @recipe) %></span>

@@ -5,18 +5,34 @@ defmodule CookbkWeb.RecipeController do
   alias Cookbk.Meals.Recipe
   alias Cookbk.Meals.RecipeStep
 
+  import Logger
+
   def index(conn, _params) do
     recipes = Meals.list_recipes()
     render(conn, "index.html", recipes: recipes)
   end
 
   def new(conn, _params) do
-    changeset = Meals.change_recipe(%Recipe{})
+    changeset =
+      Meals.change_recipe(%Recipe{
+        recipe_steps: [%RecipeStep{order_id: 0}]
+      })
+
     render(conn, "new.html", changeset: changeset)
   end
 
   def create(conn, %{"recipe" => recipe_params}) do
     current_user = conn.assigns.current_user
+
+    # Add order ID to changeset from UI ordering
+    recipe_params =
+      update_in(recipe_params, ["recipe_steps"], fn steps ->
+        steps
+        |> Enum.map(fn {i, data} -> {i, Map.put(data, "order_id", i)} end)
+        |> Enum.into(%{})
+      end)
+
+    Logger.info(inspect(recipe_params))
 
     case Meals.create_recipe(current_user, recipe_params) do
       {:ok, recipe} ->
