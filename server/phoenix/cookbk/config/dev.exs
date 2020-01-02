@@ -74,3 +74,6 @@ config :phoenix, :stacktrace_depth, 20
 
 # Initialize plugs at runtime for faster development compilation
 config :phoenix, :plug_init_mode, :runtime
+
+# Enable an extra Debug UI in dev mode
+config :cookbk, debug_ui: true

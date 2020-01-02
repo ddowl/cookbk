@@ -1,14 +1,16 @@
-<div>
-  <strong>Debug Panel</strong>
-  <br/>
-  Current Assigns Map:
-  <br/>
-  <% dev_assigns = Map.drop(assigns, [:view_module, :view_template, :conn]) %>
-  <ul>
-  <%= for {k, v} <- dev_assigns do %>
-    <li>
-      <span><strong><%= k %> </strong>: <%= inspect(v) %></span>
-    </li>
-  <% end %>
-  </ul>
-</div>
+<%= if @debug_ui do %>
+  <div>
+    <strong>Debug Panel</strong>
+    <br/>
+    Current Assigns Map:
+    <br/>
+    <% dev_assigns = Map.drop(assigns, [:view_module, :view_template, :conn, :debug_ui]) %>
+    <ul>
+    <%= for {k, v} <- dev_assigns do %>
+      <li>
+        <span><strong><%= k %> </strong>: <%= inspect(v) %></span>
+      </li>
+    <% end %>
+    </ul>
+  </div>
+<% end %>
