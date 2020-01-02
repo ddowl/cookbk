@@ -18,7 +18,7 @@
             <li>Session Status:
               <%= case Plug.Conn.get_session(@conn, :user_id) do
                 nil -> "Not logged in"
-                user_id -> "Logged in as user ##{user_id}"
+                id -> "Logged in as user ##{id}"
               end %>
             </li>
           </ul>

@@ -3,5 +3,13 @@
   <p>A website that helps you manage cooking several things at once.</p>
 </section>
 
-<span><%= link "Log In", to: Routes.session_path(@conn, :new) %></span>
-<span><%= link "Sign Up", to: Routes.user_path(@conn, :new) %></span>
+<%= if is_nil(@user_id) do %>
+  <span><%= link "Log In", to: Routes.session_path(@conn, :new) %></span>
+  <span><%= link "Sign Up", to: Routes.user_path(@conn, :new) %></span>
+<% else %>
+  <%= form_for @conn, Routes.session_path(@conn, :delete), [method: :delete, as: :user], fn _ -> %>
+    <div class="form-group">
+      <%= submit "logout" %>
+    </div>
+  <% end %>
+<% end %>
