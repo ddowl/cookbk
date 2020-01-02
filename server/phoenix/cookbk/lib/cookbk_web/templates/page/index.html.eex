@@ -3,10 +3,11 @@
   <p>A website that helps you manage cooking several things at once.</p>
 </section>
 
-<%= if is_nil(@user_id) do %>
+<%= if is_nil(@current_user) do %>
   <span><%= link "Log In", to: Routes.session_path(@conn, :new) %></span>
   <span><%= link "Sign Up", to: Routes.user_path(@conn, :new) %></span>
 <% else %>
+  <span><%= link "Profile Page", to: Routes.user_path(@conn, :show, @current_user) %></span>
   <%= form_for @conn, Routes.session_path(@conn, :delete), [method: :delete, as: :user], fn _ -> %>
     <div class="form-group">
       <%= submit "logout" %>
