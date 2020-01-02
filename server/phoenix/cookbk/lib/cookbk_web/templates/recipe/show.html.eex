@@ -10,9 +10,18 @@
     <strong>Description:</strong>
     <%= @recipe.description %>
   </li>
+</ul>
 
+<ul>
   <%= for step <- @recipe.recipe_steps do %>
-    <span>A step!</span>
+  <li>
+    <span><strong>Step <%= step.id %></strong></span>
+    <ul>
+      <li>Description: <%= step.description %></li>
+      <li>Duration: <%= step.duration %> minutes</li>
+      <li>Is Attended?: <%= step.is_attended %></li>
+    </ul>
+  </li>
   <% end %>
 </ul>
 
