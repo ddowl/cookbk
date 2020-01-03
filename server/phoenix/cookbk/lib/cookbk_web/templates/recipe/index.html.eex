@@ -6,6 +6,7 @@
       <th>Name</th>
       <th>Description</th>
       <th># of steps</th>
+      <th>Total duration</th>
 
       <th></th>
     </tr>
@@ -16,6 +17,7 @@
       <td><%= recipe.name %></td>
       <td><%= recipe.description %></td>
       <td><%= Enum.count(recipe.recipe_steps) %></td>
+      <td><%= recipe.recipe_steps |> Enum.map(fn s -> s.duration end) |> Enum.sum() %> minutes</td>
 
       <td>
         <span><%= link "Show", to: Routes.user_recipe_path(@conn, :show, @current_user, recipe) %></span>

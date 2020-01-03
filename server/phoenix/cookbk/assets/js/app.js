@@ -18,6 +18,7 @@ import "phoenix_html";
 
 // Adds a step to the recipe editor
 // TODO: Should we move to Elm or React FE? This mutable-state / multiple-source-of-truths is going to create bugs
+// TODO: Remove add_step link after click
 var el = document.getElementById("add_step");
 el.onclick = function(e) {
   e.preventDefault();
