@@ -21,6 +21,7 @@ defmodule Cookbk.Meals do
   """
   def list_recipes do
     Repo.all(Recipe)
+    |> Repo.preload([:recipe_steps])
   end
 
   @doc """
