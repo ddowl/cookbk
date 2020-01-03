@@ -43,6 +43,7 @@ defmodule Cookbk.Accounts do
     User
     |> Repo.get!(id)
     |> Repo.preload(:credential)
+    |> Repo.preload(:recipes)
   end
 
   @doc """

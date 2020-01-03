@@ -10,8 +10,10 @@ defmodule CookbkWeb.MealController do
   end
 
   def make(conn, params) do
+    render(conn, "results.html")
   end
 
   def results(conn, params) do
+    conn
   end
 end

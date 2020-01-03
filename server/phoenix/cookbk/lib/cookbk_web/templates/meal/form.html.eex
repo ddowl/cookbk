@@ -1,5 +1,12 @@
-<header>Let's Make A Meal!</header>
+<header><strong>Let's Make A Meal!</strong></header>
 
-What recipes do you want to make?
+<%= form_for @conn, Routes.user_meal_path(@conn, :make, @current_user), fn f -> %>
+  <strong>What recipes do you want to make?</strong>
+  <% recipes_to_ids = Map.new(@current_user.recipes, fn r -> {r.name, r.id} end) %>
+  <%= multiple_select(f, :recipes, recipes_to_ids) %>
 
-When do you need them done?
+  <strong>When do you need them done?</strong>
+  <%= time_select f, :end_time %>
+
+  <%= submit "Make my meal plan!" %>
+<% end %>
