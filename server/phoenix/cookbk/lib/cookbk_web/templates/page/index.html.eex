@@ -7,7 +7,11 @@
   <span><%= link "Log In", to: Routes.session_path(@conn, :new) %></span>
   <span><%= link "Sign Up", to: Routes.user_path(@conn, :new) %></span>
 <% else %>
-  <span><%= link "Profile Page", to: Routes.user_path(@conn, :show, @current_user) %></span>
+  <ul>
+    <li><span><%= link "Profile Page", to: Routes.user_path(@conn, :show, @current_user) %></span></li>
+    <li><span><%= link "Make a Meal", to: Routes.user_meal_path(@conn, :form, @current_user) %></span></li>
+  </ul>
+
   <%= form_for @conn, Routes.session_path(@conn, :delete), [method: :delete, as: :user], fn _ -> %>
     <div class="form-group">
       <%= submit "logout" %>

@@ -22,6 +22,12 @@ defmodule CookbkWeb.Router do
     resources "/users", UserController do
       pipe_through [:authenticate_user]
 
+      scope "/meal" do
+        get "/form", MealController, :form
+        post "/make", MealController, :make
+        get "/results", MealController, :results
+      end
+
       resources "/recipes", RecipeController
     end
 
