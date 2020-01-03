@@ -8,6 +8,8 @@ defmodule Cookbk.Meals do
 
   alias Cookbk.Meals.Recipe
 
+  import Logger
+
   @doc """
   Returns the list of recipes.
 
@@ -73,8 +75,16 @@ defmodule Cookbk.Meals do
 
   """
   def update_recipe(user, %Recipe{} = recipe, attrs) do
-    recipe
-    |> Recipe.changeset(attrs)
+    Logger.info(inspect(recipe))
+    Logger.info(inspect(attrs))
+
+    change =
+      recipe
+      |> Recipe.changeset(attrs)
+
+    Logger.info(inspect(change))
+
+    change
     |> Ecto.Changeset.put_assoc(:user, user)
     |> Repo.update()
   end

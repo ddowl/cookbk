@@ -1,0 +1,19 @@
+<%= inputs_for @f, :recipe_steps, fn s -> %>
+  <span>Step <%= if !is_nil(s.data.order_id) do s.data.order_id + 1 else "?" end %></span>
+
+  <div id="new-step">
+    <div class="form-group">
+      <%= label s, :description %>
+      <%= text_input s, :description %>
+      <%= error_tag s, :description %>
+
+      <%= label s, :duration, "Duration (in minutes)" %>
+      <%= number_input s, :duration %>
+      <%= error_tag s, :duration %>
+
+      <%= label s, :is_attended, "Is Attended?" %>
+      <%= checkbox s, :is_attended %>
+      <%= error_tag s, :is_attended %>
+    </div>
+  </div>
+<% end %>

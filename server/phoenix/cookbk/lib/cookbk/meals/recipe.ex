@@ -14,10 +14,10 @@ defmodule Cookbk.Meals.Recipe do
   end
 
   @doc false
-  def changeset(recipe, attrs) do
+  def changeset(recipe, attrs \\ %{}) do
     recipe
     |> cast(attrs, [:name, :description])
-    |> cast_assoc(:recipe_steps, required: true)
+    |> cast_assoc(:recipe_steps)
     |> validate_required([:name, :description])
   end
 end

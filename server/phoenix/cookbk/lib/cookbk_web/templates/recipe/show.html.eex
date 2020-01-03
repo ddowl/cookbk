@@ -15,7 +15,7 @@
 <ul>
   <%= for step <- @recipe.recipe_steps do %>
   <li>
-    <span><strong>Step <%= step.id %></strong></span>
+    <span><strong>Step <%= step.order_id + 1 %></strong></span>
     <ul>
       <li>Description: <%= step.description %></li>
       <li>Duration: <%= step.duration %> minutes</li>

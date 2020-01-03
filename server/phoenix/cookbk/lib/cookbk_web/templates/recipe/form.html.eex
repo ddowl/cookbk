@@ -14,7 +14,7 @@
   <%= error_tag f, :description %>
 
   <%= inputs_for f, :recipe_steps, fn s -> %>
-    <span>Step <%= s.index + 1 %></span>
+    <span>Step <%= if !is_nil(s.data.order_id) do s.data.order_id + 1 else 0 end %></span>
 
     <div class="form-group">
       <%= label s, :description %>
@@ -29,7 +29,16 @@
       <%= checkbox s, :is_attended %>
       <%= error_tag s, :is_attended %>
     </div>
+
+
+    <div class="form-group">
+      <%= label s, :delete, "Delete?", class: "control-label" %>
+      <%= checkbox s, :delete %>
+    </div>
   <% end %>
+
+  <% num_recipe_steps = if Map.get(assigns, "recipe") do Enum.count(@recipe.recipe_steps) else 0 end %>
+  <%= link_to_add_steps num_recipe_steps %>
 
   <div>
     <%= submit "Save" %>
