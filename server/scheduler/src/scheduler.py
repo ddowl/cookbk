@@ -18,6 +18,7 @@ https://developers.google.com/optimization/scheduling/job_shop
 
 
 def schedule_recipes(recipes):
+    return "Woot woot mf!!"
     if len(recipes) == 0:
         return []
 
@@ -38,7 +39,8 @@ def schedule_recipes(recipes):
             nonattending_machine += 1
             return task
 
-    jobs_data = [[task_transform(step) for step in recipe.steps] for recipe in recipes]
+    jobs_data = [[task_transform(step) for step in recipe.steps]
+                 for recipe in recipes]
 
     machines_count = 1 + max(task[0] for job in jobs_data for task in job)
     all_machines = range(machines_count)
@@ -49,7 +51,8 @@ def schedule_recipes(recipes):
     horizon = sum(task[1] for job in jobs_data for task in job)
 
     task_type = collections.namedtuple('task_type', 'start end interval')
-    assigned_task_type = collections.namedtuple('assigned_task_type', 'start recipe step')
+    assigned_task_type = collections.namedtuple(
+        'assigned_task_type', 'start recipe step')
 
     ####################
     # Define Variables #
@@ -58,11 +61,14 @@ def schedule_recipes(recipes):
     all_tasks = {}
     for job in all_jobs:
         for task_id, task in enumerate(jobs_data[job]):
-            start_var = model.NewIntVar(0, horizon, 'start_%i_%i' % (job, task_id))
+            start_var = model.NewIntVar(
+                0, horizon, 'start_%i_%i' % (job, task_id))
             duration = task[1]
             end_var = model.NewIntVar(0, horizon, 'end_%i_%i' % (job, task_id))
-            interval_var = model.NewIntervalVar(start_var, duration, end_var, 'interval_%i_%i' % (job, task_id))
-            all_tasks[job, task_id] = task_type(start=start_var, end=end_var, interval=interval_var)
+            interval_var = model.NewIntervalVar(
+                start_var, duration, end_var, 'interval_%i_%i' % (job, task_id))
+            all_tasks[job, task_id] = task_type(
+                start=start_var, end=end_var, interval=interval_var)
 
     ######################
     # Define Constraints #
@@ -80,7 +86,8 @@ def schedule_recipes(recipes):
     # Add precedence contraints.
     for job in all_jobs:
         for task_id in range(0, len(jobs_data[job]) - 1):
-            model.Add(all_tasks[job, task_id].end <= all_tasks[job, task_id + 1].start)
+            model.Add(all_tasks[job, task_id].end <=
+                      all_tasks[job, task_id + 1].start)
 
     # Define Makespan
 
@@ -96,7 +103,8 @@ def schedule_recipes(recipes):
     # Add max_serving_wait_time constraints
     # (i.e. a given recipe can't end more than max_serving_time minutes before all recipes are done)
     for job in all_jobs:
-        model.Add(last_task(job).end >= makespan_var - recipes[job].max_serving_wait_time)
+        model.Add(last_task(job).end >= makespan_var -
+                  recipes[job].max_serving_wait_time)
 
     # # Minimize difference in recipe end times
     # # (The difference between the end times of the last steps between any 2 recipes should be minimized)
