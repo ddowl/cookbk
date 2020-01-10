@@ -18,7 +18,6 @@ https://developers.google.com/optimization/scheduling/job_shop
 
 
 def schedule_recipes(recipes):
-    return "Woot woot mf!!"
     if len(recipes) == 0:
         return []
 
@@ -186,3 +185,9 @@ def schedule_recipes(recipes):
         raise Exception(f"Model is invalid {status}")
     else:
         raise Exception("Unknown error")
+
+
+# Translation function for Erlang interop
+def schedule_recipes_erl(erl_recipes):
+    print(erl_recipes)
+    return erl_recipes
