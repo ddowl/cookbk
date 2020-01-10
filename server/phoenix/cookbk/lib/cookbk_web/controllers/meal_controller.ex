@@ -14,8 +14,18 @@ defmodule CookbkWeb.MealController do
   # Assumes scheduler is set up with a virutal environment with Python 3.7.6
   def make(conn, params) do
     Logger.info(inspect(params))
-    recipes = Enum.map(params["recipes"], &Meals.get_recipe!/1)
-    Logger.info(inspect(recipes))
+
+    # TODO: read just step duration and attendance info rather than filtering
+    recipes =
+      params["recipes"]
+      |> Enum.map(&Meals.get_recipe!/1)
+
+    step_info =
+      Enum.map(recipes, fn r ->
+        {r.id, Enum.map(r.recipe_steps, fn step -> {step.duration, step.is_attended} end)}
+      end)
+
+    Logger.info(inspect(step_info))
 
     cookbk_path = Path.expand("../../../")
     scheduler_path = "server/scheduler"
@@ -25,6 +35,7 @@ defmodule CookbkWeb.MealController do
     scheduler_src_path = Path.join(abs_scheduler_path, "src")
     scheduler_lib_path = Path.join(abs_scheduler_path, "env/lib/python3.7/site-packages")
 
+    # TODO: start up python scheduler process when Phoenix loads to reduce process churn / interop latency
     {:ok, pid} =
       :python.start([
         {:python_path,
@@ -41,12 +52,17 @@ defmodule CookbkWeb.MealController do
     res = :python.call(pid, :sys, :"version.__str__", [])
     Logger.info("From python")
     Logger.info(res)
+    Logger.info("\n")
 
-    res = :python.call(pid, :scheduler, :schedule_recipes, [[]])
+    scheduler_results = :python.call(pid, :erlang, :schedule_recipes_erl, [step_info])
+
     Logger.info("From python")
-    Logger.info(res)
+    Logger.info(inspect(scheduler_results))
+    Logger.info("\n")
 
-    render(conn, "results.html")
+    :python.stop(pid)
+
+    render(conn, "results.html", meal_schedule: res)
   end
 
   def results(conn, params) do

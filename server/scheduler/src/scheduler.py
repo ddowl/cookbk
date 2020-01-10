@@ -185,9 +185,3 @@ def schedule_recipes(recipes):
         raise Exception(f"Model is invalid {status}")
     else:
         raise Exception("Unknown error")
-
-
-# Translation function for Erlang interop
-def schedule_recipes_erl(erl_recipes):
-    print(erl_recipes)
-    return erl_recipes
