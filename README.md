@@ -12,7 +12,9 @@ The motivation for this application comes from the difficulty that arises when t
 A prime example is something like Thanksgiving dinner. If you want the turkey, stuffing, gravy, potatoes, and cranberry sauce to all come out piping hot (except the cranberry of course) at the same time, you either need (1) experience making large meals, or (2) a friend that can tell you when you should start working on each part of each recipe. Cookbk aims to be an electronic substitute of the latter.
 
 ## Technical Context
+
 ### Scheduling
+
 It turns out that concurrent recipe scheduling bears a close resemblance to a well-known optimization problem called [Job-Shop scheduling](https://en.wikipedia.org/wiki/Job_shop_scheduling). All we need to do is add some additional constraints/variables such as (1) ensuring that every task ends _as late as possible_ from the target time (food comes out hot), and (2) letting the cook work on other recipes if possible (while a turkey is in the oven, for instance).
 
 The bad news is that [this problem is NP-hard](https://en.wikipedia.org/wiki/Job_shop_scheduling#NP-hardness). The good news is that there are constraint solvers out there that are good at solving exactly this sort of thing. I've chosen to use [Google's OR-Tools](https://developers.google.com/optimization/scheduling/job_shop) Python client for implementing the scheduling algorithm.
@@ -20,6 +22,7 @@ The bad news is that [this problem is NP-hard](https://en.wikipedia.org/wiki/Job
 There are many assumptions the current scheduling algorithm makes that can be improved in the future. Notably, it assumes that there are infinite cooks with infinite kitchen resources. Since this will probably yield some _very_ difficult instructions for the novice-cook-target-audience, we will likely need to parameterize the scheduling algorithm with additional resource constraints.
 
 ### Web Application Legacy Notes
+
 `<rant>`
 
 I initially created this project using a [Typescript](https://www.typescriptlang.org/) [React](https://reactjs.org/) + [GraphQL](https://graphql.org/) frontend with a Typescript / Node + [Prisma API](https://www.prisma.io/) backend, in order to learn GraphQL. I found this stack difficult to work with, partly due to the GraphQL components, and partly due to _all_ of the things I was used to getting for free with [Rails](https://rubyonrails.org/) (persistence, sessions, auth, etc) that I was having to struggle through implementing by hand (which is still a useful part of the learning process). I stepped away from the project for a while, somewhat frustrated with my lack of progress.
@@ -40,20 +43,20 @@ To start a local instance of Cookbk, you'll need to clone this repo, and make su
 
 The scheduler uses a Python virtual environment to store all of its dependencies. Make sure you're using the right Python version (in `.python-version`) and run the following in the `scheduler` directory:
 
-```
-$ python3 -m venv env
-$ source env/bin/activate
-(env) $ pip install -r requirements.txt
+```bash
+python3 -m venv env
+source env/bin/activate
+pip install -r requirements.txt
 ```
 
 Then, navigate to the Phoenix app directory: `cookbk/server/phoenix/cookbk`. Assuming you've installed your Elixir & Phoenix dependencies correctly, you should be able to enter:
 
-```
-$ mix deps.get
-$ mix deps.compile
-$ cd assets && npm install && node node_modules/webpack/bin/webpack.js --mode development
-$ mix ecto.create
-$ mix phx.server
+```bash
+mix deps.get
+mix deps.compile
+cd assets && npm install && node node_modules/webpack/bin/webpack.js --mode development
+mix ecto.create
+mix phx.server
 ```
 
 to start your local instance of Cookbk!
