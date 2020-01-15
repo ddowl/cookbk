@@ -1,0 +1,41 @@
+<%
+  # TODO: format time
+  start_time = Map.get(@meal_schedule, :start_time)
+  end_time = Map.get(@meal_schedule, :end_time)
+
+  schedule =
+    Map.get(@meal_schedule, :annotated_recipes)
+    |> Enum.flat_map(fn {recipe_name, steps} ->
+      Enum.map(steps, fn step ->
+        step
+        |>  Map.put(:recipe_name, recipe_name)
+        |>  Map.put(:start_time, Time.add(start_time, step.start_min * 60))
+      end)
+    end)
+    |> Enum.sort_by(fn step -> step.start_min end)
+
+%>
+
+<span><strong>Total Duration: <%= Map.get(@meal_schedule, :total_duration_minutes)%></strong></span>
+<br />
+<span><strong>Start Time: <%= Time.to_string(start_time) %></strong></span>
+<br />
+<span><strong>End Time: <%= Time.to_string(end_time) %></strong></span>
+<br />
+<br />
+<span><strong>Schedule:</strong></span>
+<br />
+<ul>
+  <%= for step <- schedule do %>
+  <li>
+    <span><strong><%= step.recipe_name %> Step <%= step.order_id + 1 %></strong></span>
+    <ul>
+      <li>Description: <%= step.description %></li>
+      <li>Duration: <%= step.duration %> minutes</li>
+      <li>Is Attended?: <%= step.is_attended %></li>
+      <li>Start Time: <%= Time.to_string(step.start_time) %></li>
+    </ul>
+  </li>
+  <% end %>
+</ul>
+

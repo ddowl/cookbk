@@ -13,8 +13,6 @@ defmodule CookbkWeb.MealController do
 
   # Assumes scheduler is set up with a virutal environment with Python 3.7.6
   def make(conn, params) do
-    Logger.info(inspect(params))
-
     # TODO: read just step duration and attendance info rather than filtering
     recipes =
       params["recipes"]
@@ -49,20 +47,48 @@ defmodule CookbkWeb.MealController do
         {:python, to_charlist(venv_python_interpreter_path)}
       ])
 
-    res = :python.call(pid, :sys, :"version.__str__", [])
-    Logger.info("From python")
-    Logger.info(res)
-    Logger.info("\n")
-
     scheduler_results = :python.call(pid, :erlang, :schedule_recipes_erl, [step_info])
-
-    Logger.info("From python")
-    Logger.info(inspect(scheduler_results))
-    Logger.info("\n")
-
     :python.stop(pid)
 
-    render(conn, "results.html", meal_schedule: res)
+    total_duration_minutes =
+      scheduler_results
+      |> Enum.flat_map(fn {_, steps} ->
+        Enum.map(steps, fn {d, _, start} ->
+          d + start
+        end)
+      end)
+      |> Enum.max()
+
+    %{"hour" => h, "minute" => m} = Map.get(params, "end_time")
+    {:ok, end_time} = Time.new(String.to_integer(h), String.to_integer(m), 0)
+    start_time = Time.add(end_time, -total_duration_minutes * 60)
+
+    annotated_recipes =
+      Enum.map(scheduler_results, fn {recipe_id, steps} ->
+        recipe = Meals.get_recipe!(recipe_id)
+
+        annotated_steps =
+          recipe.recipe_steps
+          |> Enum.map(fn step ->
+            Map.take(step, [:description, :duration, :is_attended, :order_id])
+          end)
+          |> Enum.zip(Enum.map(steps, fn {_, _, start_min} -> start_min end))
+          |> Enum.map(fn {step, start} -> Map.put(step, :start_min, start) end)
+
+        {recipe.name, annotated_steps}
+      end)
+      |> List.foldl(%{}, fn {name, steps}, acc -> Map.put(acc, name, steps) end)
+
+    Logger.info(inspect(annotated_recipes))
+
+    results = %{
+      start_time: start_time,
+      end_time: end_time,
+      total_duration_minutes: total_duration_minutes,
+      annotated_recipes: annotated_recipes
+    }
+
+    render(conn, "results.html", meal_schedule: results)
   end
 
   def results(conn, params) do
