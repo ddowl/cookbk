@@ -1,5 +1,7 @@
 defmodule CookbkWeb.Router do
   use CookbkWeb, :router
+  import Plug.BasicAuth
+  import Phoenix.LiveDashboard.Router
 
   pipeline :browser do
     plug :accepts, ["html"]
@@ -9,6 +11,12 @@ defmodule CookbkWeb.Router do
     plug :put_secure_browser_headers
     plug :put_root_layout, {CookbkWeb.LayoutView, :root}
     plug :debug_ui
+  end
+
+
+  # TODO: make admin password env var
+  pipeline :admins_only do
+    plug :basic_auth, username: "admin", password: "secret_admin_password"
   end
 
   pipeline :api do
@@ -41,6 +49,11 @@ defmodule CookbkWeb.Router do
   # scope "/api", CookbkWeb do
   #   pipe_through :api
   # end
+
+  scope "/" do
+    pipe_through [:browser, :admins_only]
+    live_dashboard "/dashboard"
+  end
 
   # TODO: baaaaad code duplication
   defp authenticate_user(conn, _) do

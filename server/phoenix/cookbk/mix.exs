@@ -45,7 +45,8 @@ defmodule Cookbk.MixProject do
       {:plug_cowboy, "~> 2.0"},
       {:erlport, "~> 0.10.1"},
       {:phoenix_live_view, "~> 0.14.3"},
-      {:floki, ">= 0.0.0", only: :test}
+      {:floki, ">= 0.0.0", only: :test},
+      {:phoenix_live_dashboard, "~> 0.1"}
     ]
   end
 
