@@ -1,6 +1,7 @@
 defmodule CookbkWeb.Router do
   use CookbkWeb, :router
   import Plug.BasicAuth
+  import Phoenix.LiveView.Router
   import Phoenix.LiveDashboard.Router
 
   pipeline :browser do
@@ -26,6 +27,7 @@ defmodule CookbkWeb.Router do
   scope "/", CookbkWeb do
     pipe_through :browser
 
+
     get "/", PageController, :index
 
     resources "/users", UserController do
@@ -43,6 +45,8 @@ defmodule CookbkWeb.Router do
     resources "/sessions", SessionController,
       only: [:new, :create, :delete],
       singleton: true
+
+    live "/thermostat", ThermostatLive
   end
 
   # Other scopes may use custom stacks.
