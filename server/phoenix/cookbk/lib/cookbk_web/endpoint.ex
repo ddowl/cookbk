@@ -1,9 +1,18 @@
+
 defmodule CookbkWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :cookbk
+
+  @session_options [
+    store: :cookie,
+    key: "_cookbk_key",
+    signing_salt: "56WQhz9y"
+  ]
 
   socket "/socket", CookbkWeb.UserSocket,
     websocket: true,
     longpoll: false
+
+
 
   # Serve at "/" the static files from "priv/static" directory.
   #
@@ -37,10 +46,10 @@ defmodule CookbkWeb.Endpoint do
   # The session will be stored in the cookie and signed,
   # this means its contents can be read but not tampered with.
   # Set :encryption_salt if you would also like to encrypt it.
-  plug Plug.Session,
-    store: :cookie,
-    key: "_cookbk_key",
-    signing_salt: "56WQhz9y"
+  plug Plug.Session, @session_options
+
+  socket "/live", Phoenix.LiveView.Socket,
+         websocket: [connect_info: [session: @session_options]]
 
   plug CookbkWeb.Router
 end

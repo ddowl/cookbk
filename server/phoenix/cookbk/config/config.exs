@@ -15,7 +15,8 @@ config :cookbk, CookbkWeb.Endpoint,
   url: [host: "localhost"],
   secret_key_base: "e9ti7DZKxq/wE5sNWzQ7cYPA1AXxSP7MvB6QsDDDMOQZBAZmnS0axoK/eJynm20h",
   render_errors: [view: CookbkWeb.ErrorView, accepts: ~w(html json)],
-  pubsub: [name: Cookbk.PubSub, adapter: Phoenix.PubSub.PG2]
+  pubsub_server: Cookbk.PubSub,
+  live_view: [signing_salt: "MaVb+PnLR9o6oF94WXdNrz8VHnPR0RYi"]
 
 # Configures Elixir's Logger
 config :logger, :console,

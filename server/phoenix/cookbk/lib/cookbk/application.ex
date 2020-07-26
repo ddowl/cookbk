@@ -10,6 +10,8 @@ defmodule Cookbk.Application do
     children = [
       # Start the Ecto repository
       Cookbk.Repo,
+      # Start the PubSub system
+      {Phoenix.PubSub, name: Cookbk.PubSub},
       # Start the endpoint when the application starts
       CookbkWeb.Endpoint
       # Starts a worker by calling: Cookbk.Worker.start_link(arg)

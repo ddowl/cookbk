@@ -1,34 +1,21 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8"/>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Cookbk</title>
-    <link rel="stylesheet" href="<%= Routes.static_path(@conn, "/css/app.css") %>"/>
-  </head>
-  <body>
-    <header>
-      <section class="container">
-        <h1><%= link "C O O K B K", to: Routes.page_path(@conn, :index), class: "header-logo" %></h1>
-        <nav role="navigation">
-          <ul>
-            <li>Session Status:
-              <%= case Plug.Conn.get_session(@conn, :user_id) do
-                nil -> "Not logged in"
-                id -> "Logged in as user ##{id}"
-              end %>
-            </li>
-          </ul>
-        </nav>
-      </section>
-    </header>
-    <main role="main" class="container">
-      <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>
-      <p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>
-      <%= render @view_module, @view_template, assigns %>
-      <%= render "debug.html", assigns %>
-    </main>
-    <script type="text/javascript" src="<%= Routes.static_path(@conn, "/js/app.js") %>"></script>
-  </body>
-</html>
+<header>
+  <section class="container">
+    <h1><%= link "C O O K B K", to: Routes.page_path(@conn, :index), class: "header-logo" %></h1>
+    <nav role="navigation">
+      <ul>
+        <li>Session Status:
+          <%= case Plug.Conn.get_session(@conn, :user_id) do
+            nil -> "Not logged in"
+            id -> "Logged in as user ##{id}"
+          end %>
+        </li>
+      </ul>
+    </nav>
+  </section>
+</header>
+<main role="main" class="container">
+  <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>
+  <p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>
+  <%= @inner_content %>
+  <%= render "debug.html", assigns %>
+</main>
