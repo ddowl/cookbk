@@ -10,11 +10,8 @@
   <body>
     <header>
       <section class="container">
-        <h1>C O O K B K</h1>
+        <h1><%= link "C O O K B K", to: Routes.page_path(@conn, :index), class: "header-logo" %></h1>
         <nav role="navigation">
-          <ul>
-            <li><%= link "Home", to: Routes.page_path(@conn, :index) %></li>
-          </ul>
           <ul>
             <li>Session Status:
               <%= case Plug.Conn.get_session(@conn, :user_id) do

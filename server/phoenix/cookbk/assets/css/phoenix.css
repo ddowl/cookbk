@@ -607,6 +607,10 @@ header nav a {
   display: block;
 }
 
+.header-logo, .header-logo:hover {
+  color: inherit;
+}
+
 @media (min-width: 40.0rem) {
   /* Small devices (landscape phones, 576px and up) */
   header section {
