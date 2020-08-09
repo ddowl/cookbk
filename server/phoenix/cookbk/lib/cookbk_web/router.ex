@@ -39,7 +39,9 @@ defmodule CookbkWeb.Router do
         get "/results", MealController, :results
       end
 
-      resources "/recipes", RecipeController
+      resources "/recipes", RecipeController do
+        live "/new", RecipeLive
+      end
     end
 
     resources "/sessions", SessionController,

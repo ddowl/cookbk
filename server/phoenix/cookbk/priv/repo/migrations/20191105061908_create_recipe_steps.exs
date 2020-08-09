@@ -7,7 +7,7 @@ defmodule Cookbk.Repo.Migrations.CreateRecipeSteps do
       add :description, :string
       add :duration, :integer
       add :is_attended, :boolean, default: false, null: false
-      add :recipe_id, references(:recipes, on_delete: :nothing)
+      add :recipe_id, references(:recipes, on_delete: :delete_all)
 
       timestamps()
     end

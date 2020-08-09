@@ -4,6 +4,8 @@ defmodule CookbkWeb.RecipeController do
   alias Cookbk.Meals
   alias Cookbk.Meals.Recipe
   alias Cookbk.Meals.RecipeStep
+  alias Phoenix.LiveView
+  import Phoenix.LiveView.Controller
   import Logger
 
   def index(conn, _params) do
@@ -12,12 +14,7 @@ defmodule CookbkWeb.RecipeController do
   end
 
   def new(conn, _params) do
-    changeset =
-      Meals.change_recipe(%Recipe{
-        recipe_steps: [%RecipeStep{order_id: 0}]
-      })
-
-    render(conn, "new.html", changeset: changeset)
+    live_render(conn, CookbkWeb.RecipeLive)
   end
 
   def create(conn, %{"recipe" => recipe_params}) do

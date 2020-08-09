@@ -9,23 +9,22 @@ defmodule Cookbk.Meals.RecipeStep do
     field :duration, :integer
     field :is_attended, :boolean, default: false
     field :order_id, :integer
-    field :delete, :boolean, virtual: true
     belongs_to :recipe, Recipe
 
     timestamps()
   end
 
   @doc false
-  def changeset(recipe_step, attrs) do
+  def changeset(recipe_step, attrs \\ %{}) do
     recipe_step
-    |> cast(attrs, [:order_id, :description, :duration, :is_attended, :delete])
-    |> set_delete_action
+    |> cast(attrs, [:order_id, :description, :duration, :is_attended])
     |> validate_required([:order_id, :description, :duration, :is_attended])
+    |> validate_number(:duration, greater_than: 0)
+    |> validate_number(:order_id, greater_than_or_equal_to: 0)
   end
 
   defp set_delete_action(changeset) do
     if get_change(changeset, :delete) do
-      Logger.info("deleting recipe")
       %{changeset | action: :delete}
     else
       changeset
