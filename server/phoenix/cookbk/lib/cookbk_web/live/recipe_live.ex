@@ -15,13 +15,13 @@ defmodule CookbkWeb.RecipeLive do
   import Logger
 
   # TODO: check if this user_id corresponds to current_user session value
-  def mount(_params, %{"user_id" => user_id}, socket) do
+  def mount(_params, %{"user_id" => user_id, "debug" => debug}, socket) do
     Logger.info("Recipe create mount")
     # TODO: generalize changeset_from_attrs to be used to create an empty recipe changeset
     recipe = Ecto.Changeset.change(%Recipe{})
     step = Ecto.Changeset.change(%RecipeStep{order_id: 0})
     empty_recipe_changeset = Ecto.Changeset.put_assoc(recipe, :recipe_steps, [step])
-    {:ok, assign(socket, changeset: empty_recipe_changeset, num_recipe_steps: 1, attempted_save?: false, user_id: user_id)}
+    {:ok, assign(socket, changeset: empty_recipe_changeset, num_recipe_steps: 1, attempted_save?: false, user_id: user_id, debug: debug)}
   end
 
   def handle_event("add_step", _session, socket) do
@@ -41,8 +41,6 @@ defmodule CookbkWeb.RecipeLive do
     # update order_ids?
     less_steps = List.delete_at(steps, idx)
     updated_changeset = changeset |> Ecto.Changeset.put_assoc(:recipe_steps, less_steps)
-    Logger.info(inspect(updated_changeset))
-
     {:noreply, assign(socket, changeset: updated_changeset, num_recipe_steps: socket.assigns.num_recipe_steps - 1)}
   end
 

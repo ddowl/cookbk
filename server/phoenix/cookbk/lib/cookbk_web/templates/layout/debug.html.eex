@@ -1,10 +1,10 @@
-<%= if @debug_ui do %>
+<%= if @debug do %>
   <div>
     <strong>Debug Panel</strong>
     <br/>
     Current Assigns Map:
     <br/>
-    <% dev_assigns = Map.drop(assigns, [:view_module, :view_template, :conn, :debug_ui]) %>
+    <% dev_assigns = Map.drop(assigns, [:view_module, :view_template, :conn, :debug]) %>
     <ul>
     <%= for {k, v} <- dev_assigns do %>
       <li>

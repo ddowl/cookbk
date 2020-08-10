@@ -11,7 +11,7 @@ defmodule CookbkWeb.Router do
     plug :protect_from_forgery
     plug :put_secure_browser_headers
     plug :put_root_layout, {CookbkWeb.LayoutView, :root}
-    plug :debug_ui
+    plug :debug
   end
 
 
@@ -75,7 +75,7 @@ defmodule CookbkWeb.Router do
     end
   end
 
-  defp debug_ui(conn, _) do
-    assign(conn, :debug_ui, Application.get_env(:cookbk, :debug_ui, false))
+  defp debug(conn, _) do
+    assign(conn, :debug, Application.get_env(:cookbk, :debug, false))
   end
 end

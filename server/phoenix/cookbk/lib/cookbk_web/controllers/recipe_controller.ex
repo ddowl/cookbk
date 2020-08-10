@@ -14,7 +14,7 @@ defmodule CookbkWeb.RecipeController do
   end
 
   def new(conn, _params) do
-    live_render(conn, CookbkWeb.RecipeLive)
+    live_render(conn, CookbkWeb.RecipeLive, session: %{"debug" => conn.assigns.debug})
   end
 
   def create(conn, %{"recipe" => recipe_params}) do
