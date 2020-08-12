@@ -1,4 +1,4 @@
-defmodule CookbkWeb.RecipeLive do
+defmodule CookbkWeb.NewRecipeLive do
   use CookbkWeb, :live_view
   import CookbkWeb.ErrorHelpers
   alias CookbkWeb.Router.Helpers, as: Routes
@@ -13,6 +13,10 @@ defmodule CookbkWeb.RecipeLive do
   import Phoenix.LiveView.Controller
 
   import Logger
+
+  def render(assigns) do
+    Phoenix.View.render(CookbkWeb.RecipeView, "form_live.html", assigns)
+  end
 
   # TODO: check if this user_id corresponds to current_user session value
   def mount(_params, %{"user_id" => user_id, "debug" => debug}, socket) do
@@ -47,9 +51,9 @@ defmodule CookbkWeb.RecipeLive do
   def handle_event("validate", %{"recipe" => recipe_params}, socket) do
     Logger.info("Recipe create validate")
     changeset = changeset_from_attrs(recipe_params)
-    Logger.info(inspect(changeset))
     {:noreply, assign(socket, changeset: changeset)}
   end
+
 
   def handle_event("save", %{"recipe" => recipe_params}, socket) do
     Logger.info("Recipe create save")

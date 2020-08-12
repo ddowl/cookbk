@@ -14,7 +14,7 @@ defmodule CookbkWeb.RecipeController do
   end
 
   def new(conn, _params) do
-    live_render(conn, CookbkWeb.RecipeLive, session: %{"debug" => conn.assigns.debug})
+    live_render(conn, CookbkWeb.NewRecipeLive, session: %{"debug" => conn.assigns.debug})
   end
 
   def create(conn, %{"recipe" => recipe_params}) do
@@ -49,7 +49,7 @@ defmodule CookbkWeb.RecipeController do
   def edit(conn, %{"id" => id}) do
     recipe = Meals.get_recipe!(id)
     changeset = Meals.change_recipe(recipe)
-    render(conn, "edit.html", recipe: recipe, changeset: changeset)
+    live_render(conn, CookbkWeb.EditRecipeLive, session: %{"debug" => conn.assigns.debug})
   end
 
   def update(conn, %{"id" => id, "recipe" => recipe_params}) do
