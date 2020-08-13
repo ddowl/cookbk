@@ -47,9 +47,7 @@ defmodule CookbkWeb.RecipeController do
   end
 
   def edit(conn, %{"id" => id}) do
-    recipe = Meals.get_recipe!(id)
-    changeset = Meals.change_recipe(recipe)
-    live_render(conn, CookbkWeb.EditRecipeLive, session: %{"debug" => conn.assigns.debug})
+    live_render(conn, CookbkWeb.EditRecipeLive, session: %{"recipe_id" => id, "debug" => conn.assigns.debug})
   end
 
   def update(conn, %{"id" => id, "recipe" => recipe_params}) do
