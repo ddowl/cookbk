@@ -7,7 +7,7 @@ defmodule CookbkWeb.NewRecipeLive do
   import Logger
 
   def render(assigns) do
-    Phoenix.View.render(CookbkWeb.RecipeView, "form_live.html", assigns)
+    Phoenix.View.render(CookbkWeb.RecipeView, "new.html", assigns)
   end
 
   # TODO: check if this user_id corresponds to current_user session value
