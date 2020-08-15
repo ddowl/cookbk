@@ -11,7 +11,6 @@ defmodule CookbkWeb.EditRecipeLive do
     Phoenix.View.render(CookbkWeb.RecipeView, "edit.html", assigns)
   end
 
-  # TODO: check if this user_id corresponds to current_user session value
   def mount(_params, %{"user_id" => user_id, "recipe_id" => recipe_id, "debug" => debug}, socket) do
     Logger.info("Recipe edit mount")
     recipe = Meals.get_recipe!(recipe_id)
@@ -47,6 +46,6 @@ defmodule CookbkWeb.EditRecipeLive do
 
   def handle_event("save", %{"recipe" => recipe_params}, socket) do
     Logger.info("Recipe edit save")
-    RecipeLiveHelpers.save(socket, recipe_params)
+    RecipeLiveHelpers.update(socket, recipe_params)
   end
 end

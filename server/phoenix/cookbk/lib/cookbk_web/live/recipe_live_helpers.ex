@@ -15,22 +15,39 @@ defmodule CookbkWeb.RecipeLiveHelpers do
 
 
   def validate(socket, recipe_params) do
-    changeset = changeset_from_attrs(recipe_params)
+    changeset = update_changeset(socket.assigns.changeset, recipe_params)
     {:noreply, assign(socket, changeset: changeset)}
   end
 
-  def save(socket, recipe_params) do
-    user_id = socket.assigns.user_id
-    changeset = changeset_from_attrs(recipe_params)
-                |> Ecto.Changeset.put_change(:user_id, user_id)
-
+  def insert(socket, recipe_params) do
+    changeset = update_changeset(socket.assigns.changeset, recipe_params)
+                |> Map.put(:action, :insert)
     case Repo.insert(changeset) do
       {:ok, recipe} ->
         {
           :noreply,
           socket
           |> put_flash(:info, "Recipe created")
-          |> redirect(to: Routes.user_recipe_path(Endpoint, :index, user_id))
+          |> redirect(to: Routes.user_recipe_path(Endpoint, :index, recipe.user_id))
+        }
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        Logger.info("Failed to delete recipe")
+        Logger.info(inspect(changeset))
+        {:noreply, assign(socket, changeset: changeset, attempted_save?: true)}
+    end
+  end
+
+  def update(socket, recipe_params) do
+    changeset = update_changeset(socket.assigns.changeset, recipe_params)
+                |> Map.put(:action, :update)
+    case Repo.update(changeset) do
+      {:ok, recipe} ->
+        {
+          :noreply,
+          socket
+          |> put_flash(:info, "Recipe updated")
+          |> redirect(to: Routes.user_recipe_path(Endpoint, :index, recipe.user_id))
         }
 
       {:error, %Ecto.Changeset{} = changeset} ->
@@ -74,27 +91,34 @@ defmodule CookbkWeb.RecipeLiveHelpers do
     }
   end
 
-  defp changeset_from_attrs(%{"name" => name, "description" => description, "recipe_steps" => recipe_steps}) do
-    steps =
+  defp update_changeset(changeset, %{"name" => name, "description" => description, "recipe_steps" => recipe_steps}) do
+    recipe_steps =
       recipe_steps
       |> Enum.map(
-           fn {i, %{"description" => desc, "duration" => dur, "is_attended" => is_attended}} ->
+           fn {i, %{"id" => id, "description" => desc, "duration" => dur, "is_attended" => is_attended}} ->
              {order_id, ""} = Integer.parse(i)
+             # TODO: cleaner way to express?
+             id = case Integer.parse(id) do
+               {id, ""} -> id
+               :error -> nil
+             end
              dur = case Integer.parse(dur) do
                {d, ""} -> d
                :error -> nil
              end
-             RecipeStep.changeset(
-               %RecipeStep{},
-               %{description: desc, duration: dur, is_attended: String.to_atom(is_attended), order_id: order_id}
-             )
+
+             %{
+               id: id,
+               description: desc,
+               duration: dur,
+               is_attended: String.to_atom(is_attended),
+               order_id: order_id
+             }
            end
          )
 
-    %Recipe{}
-    |> Recipe.changeset(%{name: name, description: description})
-    |> Ecto.Changeset.put_assoc(:recipe_steps, steps)
-    |> Map.put(:action, :insert)
+    changeset.data
+    |> Recipe.changeset(%{name: name, description: description, recipe_steps: recipe_steps})
   end
 
   # TODO: deprecate or move

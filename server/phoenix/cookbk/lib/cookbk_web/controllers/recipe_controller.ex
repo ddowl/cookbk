@@ -14,7 +14,13 @@ defmodule CookbkWeb.RecipeController do
   end
 
   def new(conn, _params) do
-    live_render(conn, CookbkWeb.NewRecipeLive, session: %{"debug" => conn.assigns.debug})
+    live_render(
+      conn,
+      CookbkWeb.NewRecipeLive,
+      session: %{
+        "debug" => conn.assigns.debug
+      }
+    )
   end
 
   def create(conn, %{"recipe" => recipe_params}) do
@@ -22,11 +28,15 @@ defmodule CookbkWeb.RecipeController do
 
     # Add order ID to changeset from UI ordering
     recipe_params =
-      update_in(recipe_params, ["recipe_steps"], fn steps ->
-        steps
-        |> Enum.map(fn {i, data} -> {i, Map.put(data, "order_id", i)} end)
-        |> Enum.into(%{})
-      end)
+      update_in(
+        recipe_params,
+        ["recipe_steps"],
+        fn steps ->
+          steps
+          |> Enum.map(fn {i, data} -> {i, Map.put(data, "order_id", i)} end)
+          |> Enum.into(%{})
+        end
+      )
 
     Logger.info(inspect(recipe_params))
 
@@ -47,7 +57,14 @@ defmodule CookbkWeb.RecipeController do
   end
 
   def edit(conn, %{"id" => id}) do
-    live_render(conn, CookbkWeb.EditRecipeLive, session: %{"recipe_id" => id, "debug" => conn.assigns.debug})
+    live_render(
+      conn,
+      CookbkWeb.EditRecipeLive,
+      session: %{
+        "recipe_id" => id,
+        "debug" => conn.assigns.debug
+      }
+    )
   end
 
   def update(conn, %{"id" => id, "recipe" => recipe_params}) do
@@ -76,7 +93,7 @@ defmodule CookbkWeb.RecipeController do
 
     Logger.info(inspect(recipe_params))
 
-    case Meals.update_recipe(current_user, recipe, recipe_params) do
+    case Meals.update_recipe(recipe, recipe_params) do
       {:ok, recipe} ->
         conn
         |> put_flash(:info, "Recipe updated successfully.")

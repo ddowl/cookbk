@@ -75,18 +75,9 @@ defmodule Cookbk.Meals do
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_recipe(user, %Recipe{} = recipe, attrs) do
-    Logger.info(inspect(recipe))
-    Logger.info(inspect(attrs))
-
-    change =
-      recipe
-      |> Recipe.changeset(attrs)
-
-    Logger.info(inspect(change))
-
-    change
-    |> Ecto.Changeset.put_assoc(:user, user)
+  def update_recipe(%Recipe{} = recipe, attrs) do
+    recipe
+    |> Recipe.changeset(attrs)
     |> Repo.update()
   end
 
