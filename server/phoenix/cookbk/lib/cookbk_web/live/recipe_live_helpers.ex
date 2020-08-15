@@ -19,6 +19,7 @@ defmodule CookbkWeb.RecipeLiveHelpers do
     {:noreply, assign(socket, changeset: changeset)}
   end
 
+  # TODO: refactor common parts of insert/update, move common functionality to Meals mod
   def insert(socket, recipe_params) do
     changeset = update_changeset(socket.assigns.changeset, recipe_params)
                 |> Map.put(:action, :insert)
@@ -59,15 +60,17 @@ defmodule CookbkWeb.RecipeLiveHelpers do
 
   def add_step(socket) do
     changeset = socket.assigns.changeset
-    steps = changeset.changes.recipe_steps
-    more_steps = steps ++ [%RecipeStep{order_id: socket.assigns.num_recipe_steps}]
-    updated_changeset = changeset
-                        |> Ecto.Changeset.put_assoc(:recipe_steps, more_steps)
+    curr_recipe = Ecto.Changeset.apply_changes(changeset)
+    steps = curr_recipe.recipe_steps
+            |> Enum.map(fn step -> Map.from_struct(step) end)
+    more_steps = steps ++ [%{order_id: socket.assigns.num_recipe_steps}]
+    updated = changeset.data
+              |> Recipe.changeset(%{recipe_steps: more_steps})
     {
       :noreply,
       assign(
         socket,
-        changeset: updated_changeset,
+        changeset: updated,
         num_recipe_steps: socket.assigns.num_recipe_steps + 1
       )
     }
@@ -76,17 +79,19 @@ defmodule CookbkWeb.RecipeLiveHelpers do
   def remove_step(socket, idx) do
     {idx, ""} = Integer.parse(idx)
     changeset = socket.assigns.changeset
-    steps = changeset.changes.recipe_steps
+    curr_recipe = Ecto.Changeset.apply_changes(changeset)
+    steps = curr_recipe.recipe_steps
+            |> Enum.map(fn step -> Map.from_struct(step) end)
     # update order_ids?
     less_steps = List.delete_at(steps, idx)
-    updated_changeset = changeset
-                        |> Ecto.Changeset.put_assoc(:recipe_steps, less_steps)
+    updated = changeset.data
+              |> Recipe.changeset(%{recipe_steps: less_steps})
     {
       :noreply,
       assign(
         socket,
-        changeset: updated_changeset,
-        num_recipe_steps: socket.assigns.num_recipe_steps - 1
+        changeset: updated,
+        num_recipe_steps: length(less_steps)
       )
     }
   end

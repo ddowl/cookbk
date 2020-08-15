@@ -35,7 +35,7 @@ defmodule CookbkWeb.EditRecipeLive do
 
   def handle_event("remove_step", %{"recipe_idx" => idx}, socket) do
     Logger.info("Recipe edit remove_step")
-    RecipeLiveHelpers.remove_step(socket)
+    RecipeLiveHelpers.remove_step(socket, idx)
   end
 
   def handle_event("validate", %{"recipe" => recipe_params}, socket) do
