@@ -65,13 +65,15 @@ defmodule CookbkWeb.RecipeLiveHelpers do
             |> Enum.map(fn step -> Map.from_struct(step) end)
     more_steps = steps ++ [%{order_id: socket.assigns.num_recipe_steps}]
     updated = changeset.data
-              |> Recipe.changeset(%{recipe_steps: more_steps})
+              |> Recipe.changeset(
+                   %{name: curr_recipe.name, description: curr_recipe.description, recipe_steps: more_steps}
+                 )
     {
       :noreply,
       assign(
         socket,
         changeset: updated,
-        num_recipe_steps: socket.assigns.num_recipe_steps + 1
+        num_recipe_steps: length(more_steps)
       )
     }
   end
@@ -85,7 +87,9 @@ defmodule CookbkWeb.RecipeLiveHelpers do
     # update order_ids?
     less_steps = List.delete_at(steps, idx)
     updated = changeset.data
-              |> Recipe.changeset(%{recipe_steps: less_steps})
+              |> Recipe.changeset(
+                   %{name: curr_recipe.name, description: curr_recipe.description, recipe_steps: less_steps}
+                 )
     {
       :noreply,
       assign(
