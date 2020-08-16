@@ -14,7 +14,7 @@ defmodule CookbkWeb.NewRecipeLive do
     Logger.info("Recipe create mount")
     # TODO: move empty recipe changeset to Meals mod
     recipe = Ecto.Changeset.change(%Recipe{user_id: user_id})
-    step = Ecto.Changeset.change(%RecipeStep{order_id: 0})
+    step = Ecto.Changeset.change(%RecipeStep{})
     empty_recipe_changeset = Ecto.Changeset.put_assoc(recipe, :recipe_steps, [step])
     {
       :ok,

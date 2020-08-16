@@ -13,9 +13,9 @@
 </ul>
 
 <ul>
-  <%= for step <- @recipe.recipe_steps do %>
+  <%= for {step, idx} <- Enum.with_index(@recipe.recipe_steps, 1) do %>
   <li>
-    <span><strong>Step <%= step.order_id + 1 %></strong></span>
+    <span><strong>Step <%= idx %></strong></span>
     <ul>
       <li>Description: <%= step.description %></li>
       <li>Duration: <%= step.duration %> minutes</li>

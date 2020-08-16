@@ -19,9 +19,12 @@ defmodule CookbkWeb.MealController do
       |> Enum.map(&Meals.get_recipe!/1)
 
     step_info =
-      Enum.map(recipes, fn r ->
-        {r.id, Enum.map(r.recipe_steps, fn step -> {step.duration, step.is_attended} end)}
-      end)
+      Enum.map(
+        recipes,
+        fn r ->
+          {r.id, Enum.map(r.recipe_steps, fn step -> {step.duration, step.is_attended} end)}
+        end
+      )
 
     Logger.info(inspect(step_info))
 
@@ -35,28 +38,37 @@ defmodule CookbkWeb.MealController do
 
     # TODO: start up python scheduler process when Phoenix loads to reduce process churn / interop latency
     {:ok, pid} =
-      :python.start([
-        {:python_path,
-         Enum.map(
-           [
-             scheduler_src_path,
-             scheduler_lib_path
-           ],
-           &to_charlist/1
-         )},
-        {:python, to_charlist(venv_python_interpreter_path)}
-      ])
+      :python.start(
+        [
+          {
+            :python_path,
+            Enum.map(
+              [
+                scheduler_src_path,
+                scheduler_lib_path
+              ],
+              &to_charlist/1
+            )
+          },
+          {:python, to_charlist(venv_python_interpreter_path)}
+        ]
+      )
 
     scheduler_results = :python.call(pid, :erlang, :schedule_recipes_erl, [step_info])
     :python.stop(pid)
 
     total_duration_minutes =
       scheduler_results
-      |> Enum.flat_map(fn {_, steps} ->
-        Enum.map(steps, fn {d, _, start} ->
-          d + start
-        end)
-      end)
+      |> Enum.flat_map(
+           fn {_, steps} ->
+             Enum.map(
+               steps,
+               fn {d, _, start} ->
+                 d + start
+               end
+             )
+           end
+         )
       |> Enum.max()
 
     %{"hour" => h, "minute" => m} = Map.get(params, "end_time")
@@ -64,19 +76,26 @@ defmodule CookbkWeb.MealController do
     start_time = Time.add(end_time, -total_duration_minutes * 60)
 
     annotated_recipes =
-      Enum.map(scheduler_results, fn {recipe_id, steps} ->
-        recipe = Meals.get_recipe!(recipe_id)
+      Enum.map(
+        scheduler_results,
+        fn {recipe_id, steps} ->
+          recipe = Meals.get_recipe!(recipe_id)
 
-        annotated_steps =
-          recipe.recipe_steps
-          |> Enum.map(fn step ->
-            Map.take(step, [:description, :duration, :is_attended, :order_id])
-          end)
-          |> Enum.zip(Enum.map(steps, fn {_, _, start_min} -> start_min end))
-          |> Enum.map(fn {step, start} -> Map.put(step, :start_min, start) end)
+          annotated_steps =
+            recipe.recipe_steps
+            |> Enum.with_index(1)
+            |> Enum.map(
+                 fn {step, idx} ->
+                   Map.take(step, [:description, :duration, :is_attended])
+                   |> Map.put(:idx, idx)
+                 end
+               )
+            |> Enum.zip(Enum.map(steps, fn {_, _, start_min} -> start_min end))
+            |> Enum.map(fn {step, start} -> Map.put(step, :start_min, start) end)
 
-        {recipe.name, annotated_steps}
-      end)
+          {recipe.name, annotated_steps}
+        end
+      )
       |> List.foldl(%{}, fn {name, steps}, acc -> Map.put(acc, name, steps) end)
 
     Logger.info(inspect(annotated_recipes))

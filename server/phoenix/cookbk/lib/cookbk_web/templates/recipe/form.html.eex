@@ -14,7 +14,7 @@
   <%= error_tag f, :description %>
 
   <%= inputs_for f, :recipe_steps, fn s -> %>
-    <span>Step <%= if !is_nil(s.data.order_id) do s.data.order_id + 1 else 0 end %></span>
+    <span>Step <%= s.index %></span>
 
     <div class="form-group">
       <%= label s, :description %>

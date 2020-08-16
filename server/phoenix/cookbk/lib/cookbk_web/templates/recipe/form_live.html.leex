@@ -24,7 +24,7 @@
         <%= checkbox s, :is_attended %>
         <%= if @attempted_save? do error_tag(s, :is_attended) end %>
 
-        <%= hidden_input s, :id %>
+        <%# hidden_input s, :id %>
       </div>
       <%= if @num_recipe_steps != 1 do%>
         <button type="button" phx-click="remove_step" phx-value-recipe_idx="<%= s.index %>">Remove Step</button>

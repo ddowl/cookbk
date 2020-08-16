@@ -28,7 +28,7 @@
 <ul>
   <%= for step <- schedule do %>
   <li>
-    <span><strong><%= step.recipe_name %> Step <%= step.order_id + 1 %></strong></span>
+    <span><strong><%= step.recipe_name %> Step <%= step.idx %></strong></span>
     <ul>
       <li>Description: <%= step.description %></li>
       <li>Duration: <%= step.duration %> minutes</li>

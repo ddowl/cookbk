@@ -3,7 +3,6 @@ defmodule Cookbk.Repo.Migrations.CreateRecipeSteps do
 
   def change do
     create table(:recipe_steps) do
-      add :order_id, :integer
       add :description, :string
       add :duration, :integer
       add :is_attended, :boolean, default: false, null: false

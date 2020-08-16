@@ -25,21 +25,6 @@ defmodule CookbkWeb.RecipeController do
 
   def create(conn, %{"recipe" => recipe_params}) do
     current_user = conn.assigns.current_user
-
-    # Add order ID to changeset from UI ordering
-    recipe_params =
-      update_in(
-        recipe_params,
-        ["recipe_steps"],
-        fn steps ->
-          steps
-          |> Enum.map(fn {i, data} -> {i, Map.put(data, "order_id", i)} end)
-          |> Enum.into(%{})
-        end
-      )
-
-    Logger.info(inspect(recipe_params))
-
     case Meals.create_recipe(current_user, recipe_params) do
       {:ok, recipe} ->
         conn
@@ -69,35 +54,11 @@ defmodule CookbkWeb.RecipeController do
 
   def update(conn, %{"id" => id, "recipe" => recipe_params}) do
     recipe = Meals.get_recipe!(id)
-    current_user = conn.assigns.current_user
-
-    # Add order ID to changeset from UI ordering
-    Logger.info(inspect(recipe_params))
-
-    steps = Map.get(recipe_params, "recipe_steps")
-
-    Logger.info(inspect(steps))
-
-    recipe_params =
-      if is_nil(steps) do
-        recipe_params
-      else
-        ordered_steps =
-          steps
-          |> Enum.with_index()
-          |> Enum.map(fn {{_order_id, data}, i} -> {i, Map.put(data, "order_id", i)} end)
-          |> Enum.into(%{})
-
-        Map.put(recipe_params, "recipe_steps", ordered_steps)
-      end
-
-    Logger.info(inspect(recipe_params))
-
     case Meals.update_recipe(recipe, recipe_params) do
       {:ok, recipe} ->
         conn
         |> put_flash(:info, "Recipe updated successfully.")
-        |> redirect(to: Routes.user_recipe_path(conn, :show, current_user, recipe))
+        |> redirect(to: Routes.user_recipe_path(conn, :show, conn.assigns.current_user, recipe))
 
       {:error, %Ecto.Changeset{} = changeset} ->
         render(conn, "edit.html", recipe: recipe, changeset: changeset)

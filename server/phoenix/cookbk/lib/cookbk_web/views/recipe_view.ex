@@ -6,9 +6,11 @@ defmodule CookbkWeb.RecipeView do
 
   def link_to_add_steps(num_recipe_steps) do
     changeset =
-      Recipe.changeset(%Recipe{
-        recipe_steps: [%RecipeStep{order_id: num_recipe_steps}]
-      })
+      Recipe.changeset(
+        %Recipe{
+          recipe_steps: [%RecipeStep{}]
+        }
+      )
 
     form = Phoenix.HTML.FormData.to_form(changeset, [])
     Logger.info(inspect(form))
